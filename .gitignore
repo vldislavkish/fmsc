@@ -1,0 +1,32 @@
+# Виртуальное окружение
+.venv/
+venv/
+env/
+
+# Python кэш
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Данные и результаты (генерируемые файлы)
+data/*.html
+output/*
+!output/.gitkeep
+
+# Временные файлы
+*.tmp
+*.log
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
