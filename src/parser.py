@@ -69,7 +69,8 @@ def parse_squad(html_path: str) -> pd.DataFrame:
 
     # Собираем индексы для базовых колонок и всех атрибутов
     all_needed_attrs = (models.GK_TECHNICAL_ATTRS +
-                        models.OUTFIELD_TECHNICAL_ATTRS)
+                        models.OUTFIELD_TECHNICAL_ATTRS +
+                        models.ALL_MENTAL_ATTRS)
     all_cols_to_find = models.BASE_COLUMNS + all_needed_attrs
 
     col_indices = {}
@@ -97,10 +98,14 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             positions_val = row_data.get('Позиции', '')
             row_data['Технические'] = calculate_technical(positions_val, cols, col_indices)
 
-            # 3. Заглушки для остальных доп. колонок
-            row_data['Ликвидность'] = ''
-            row_data['Психологические'] = ''
+            # 3. Рассчитываем "Психологические"
+            row_data['Психологические'] = calculate_mental(cols, col_indices)
+
+            # 4. Заглушка для "Физические"
             row_data['Физические'] = ''
+
+            # 5. Заглушка для "Ликвидность"
+            row_data['Ликвидность'] = ''
 
             data.append(row_data)
 
@@ -110,3 +115,33 @@ def parse_squad(html_path: str) -> pd.DataFrame:
     print(f"✅ Парсинг завершен. Обработано строк: {len(data)}")
 
     return pd.DataFrame(data, columns=models.ALL_COLUMNS)
+
+def calculate_mental(cols: list, col_indices: dict) -> float:
+    """
+    Рассчитывает психологические атрибуты по взвешенной формуле.
+    Результат в диапазоне 0-100.
+    """
+    total_score = 0.0
+
+    for group_name, group_data in models.MENTAL_GROUPS.items():
+        weight = group_data['weight']
+        attrs = group_data['attrs']
+
+        # Собираем значения атрибутов группы
+        values = []
+        for attr in attrs:
+            if attr in col_indices:
+                val_str = cols[col_indices[attr]].get_text(strip=True)
+                try:
+                    values.append(int(val_str))
+                except ValueError:
+                    pass  # Пропускаем нечисловые значения
+
+        if values:
+            # Среднее по группе (в диапазоне 1-20)
+            group_avg = sum(values) / len(values)
+            # Умножаем на вес группы
+            total_score += weight * group_avg
+
+    # Переводим из диапазона 1-20 в 0-100
+    return round(total_score * 5, 2)

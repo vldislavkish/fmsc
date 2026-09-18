@@ -50,3 +50,34 @@ OUTFIELD_TECHNICAL_ATTRS = [
     'ПКас',   # BC
     'Тех'     # BD
 ]
+
+# --- ПСИХОЛОГИЧЕСКИЕ АТРИБУТЫ (с весами) ---
+
+# Группы атрибутов и их веса
+MENTAL_GROUPS = {
+    'group_1': {
+        'weight': 0.25,
+        'attrs': ['Инт', 'Кнц', 'Вид']  # AA, AC, W
+    },
+    'group_2': {
+        'weight': 0.25,
+        'attrs': ['Раб', 'Реш', 'Ком', 'Лид']  # AF, AG, AB, AD
+    },
+    'group_3': {
+        'weight': 0.20,
+        'attrs': ['ПРш', 'Смб', 'Имп']  # AE, AH, Z
+    },
+    'group_4': {
+        'weight': 0.15,
+        'attrs': ['Хрб', 'Агр']  # AI, V
+    },
+    'group_5': {
+        'weight': 0.15,
+        'attrs': ['Ибм', 'Поз']  # Y, X
+    }
+}
+
+# Все психологические атрибуты (для поиска индексов)
+ALL_MENTAL_ATTRS = []
+for group in MENTAL_GROUPS.values():
+    ALL_MENTAL_ATTRS.extend(group['attrs'])
