@@ -100,13 +100,18 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             row_data['Технические'] = calculate_technical(positions_val, cols, col_indices)
 
             # 3. Рассчитываем "Психологические"
-            row_data['Психологические'] = calculate_mental(cols, col_indices)
+            mental = calculate_mental(cols, col_indices)
+            row_data['Психологические'] = mental
 
             # 4. Рассчитываем "Физические"
-            row_data['Физические'] = calculate_physical(cols, col_indices)
+            physical = calculate_physical(cols, col_indices)
+            row_data['Физические'] = physical
 
-            # 5. Заглушка для "Ликвидность"
-            row_data['Ликвидность'] = ''
+            # 5. Рассчитываем "Технические" (уже есть выше, получаем значение)
+            technical = row_data['Технические']
+
+            # 6. Рассчитываем "ОВР"
+            row_data['ОВР'] = calculate_ovr(physical, mental, technical)
 
             data.append(row_data)
 
@@ -172,3 +177,12 @@ def calculate_physical(cols: list, col_indices: dict) -> float:
             total_score += weight * group_avg
 
     return round(total_score * 5, 2)
+
+def calculate_ovr(physical: float, mental: float, technical: float) -> float:
+    """
+    Рассчитывает Общий Рейтинг Игрока (ОВР) по взвешенной формуле.
+    Физ: 45%, Псих: 25%, Тех: 30%.
+    Результат в диапазоне 0-100.
+    """
+    ovr = 0.45 * physical + 0.25 * mental + 0.30 * technical
+    return round(ovr, 2)
