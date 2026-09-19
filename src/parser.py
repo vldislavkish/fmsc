@@ -3,6 +3,7 @@
 """
 import os
 import glob
+import math
 import pandas as pd
 from bs4 import BeautifulSoup
 from src import config, models
@@ -20,11 +21,153 @@ def get_latest_html(directory: str = None) -> str:
     return max(list_of_files, key=os.path.getmtime)
 
 
+def parse_money_value(value_str: str) -> float:
+    """
+    Преобразует строку с денежной суммой в числовое значение (в евро).
+    Для диапазона берёт медиану (среднее арифметическое двух значений).
+
+    Примеры:
+        "€550тыс." → 550000
+        "€8млн." → 8000000
+        "€100млн. - €128млн." → 114000000
+        "Не продаётся" → None
+    """
+    if not value_str or value_str.strip() == '-' or 'Не продаётся' in value_str:
+        return None
+
+    # Если диапазон - берём медиану (среднее двух значений)
+    if ' - ' in value_str:
+        parts = value_str.split(' - ')
+        if len(parts) == 2:
+            val1 = parse_single_money(parts[0].strip())
+            val2 = parse_single_money(parts[1].strip())
+            if val1 is not None and val2 is not None:
+                return (val1 + val2) / 2
+        return None
+
+    return parse_single_money(value_str.strip())
+
+
+def parse_single_money(value_str: str) -> float:
+    """Парсит одиночное денежное значение."""
+    if not value_str:
+        return None
+
+    # Убираем символы валюты и пробелы
+    value_str = value_str.replace('€', '').replace(' ', '').strip()
+
+    # Определяем множитель
+    multiplier = 1
+    if 'млн' in value_str.lower():
+        multiplier = 1_000_000
+        value_str = value_str.lower().replace('млн', '').replace('.', '')
+    elif 'тыс' in value_str.lower():
+        multiplier = 1_000
+        value_str = value_str.lower().replace('тыс', '').replace('.', '')
+
+    try:
+        return float(value_str) * multiplier
+    except ValueError:
+        return None
+
+
+def calculate_age_coefficient(age: int) -> float:
+    """
+    Рассчитывает коэффициент возраста для формулы Цена/Качество.
+
+    Логика:
+    - 14-23 года: быстрый рост (0.7 → 1.0)
+    - 23-27 лет: плато (1.0) — пик карьеры
+    - После 27: медленное падение
+    - После 28: резкий штраф (экспоненциальное падение)
+
+    Примеры:
+        14 лет → 0.70
+        18 лет → 0.83
+        21 год (Беллингем) → 0.93
+        25 лет → 1.00 (максимум)
+        28 лет → 0.91
+        30 лет → 0.27
+        33 года → 0.05
+    """
+    if age <= 23:
+        # Быстрый рост от 0.7 (в 14 лет) до 1.0 (в 23 года)
+        base = 0.7 + (age - 14) * (0.3 / 9)
+    elif age <= 27:
+        # Плато — пик карьеры
+        base = 1.0
+    else:
+        # Медленное падение после 27
+        base = math.exp(-(age - 27) / 10)
+
+    # Штраф после 28 лет (резкое падение)
+    if age > 28:
+        penalty = math.exp(-(age - 28) / 2)
+        base = base * penalty
+
+    return round(base, 4)
+
+
+def calculate_price_quality(ovr: float, transfer_value: float,
+                            salary: float, age: int) -> float:
+    """
+    Рассчитывает показатель "Цена / Качество" (0-100).
+
+    Формула:
+      Базовый_скор = ОВР × коэф_возраста
+      Если стоимость > 0:
+        Цена/Качество = Базовый_скор / (1 + log10(стоимость / 1_000_000))
+      Иначе:
+        Цена/Качество = Базовый_скор
+
+    Args:
+        ovr: Общий рейтинг игрока (0-100)
+        transfer_value: Сумма трансфера (евро)
+        salary: Годовая зарплата (евро)
+        age: Возраст игрока
+
+    Returns:
+        Числовое значение 0-100
+    """
+    import math
+
+    # Коэффициент возраста
+    age_coeff = calculate_age_coefficient(age)
+
+    # Базовый рейтинг (0-100)
+    base_score = ovr * age_coeff
+
+    # Если игрок не продаётся или стоимость = 0
+    if transfer_value is None or transfer_value <= 0:
+        if salary is None or salary <= 0:
+            # Полностью бесплатный игрок
+            return round(base_score, 2)
+        else:
+            # Только зарплата
+            total_cost = salary * 2
+    else:
+        # Стоимость = трансфер + 2 года зарплаты
+        total_cost = transfer_value + (salary * 2 if salary else 0)
+
+    # Если общая стоимость всё ещё 0
+    if total_cost <= 0:
+        return round(base_score, 2)
+
+    # Логарифмическое масштабирование
+    # log10(стоимость в миллионах) + 1
+    cost_factor = 1 + math.log10(total_cost / 1_000_000)
+
+    # Финальный рейтинг
+    final_score = base_score / cost_factor
+
+    # Ограничение 0-100
+    final_score = min(100.0, max(0.0, final_score))
+
+    return round(final_score, 2)
+
+
 def calculate_technical(positions: str, cols: list, col_indices: dict) -> float:
-    """
-    Рассчитывает технические атрибуты (0-100) в зависимости от позиции игрока.
-    """
-    # Определяем, вратарь ли это (в русском FM вратарь обозначается как "ВР" или "В")
+    """Рассчитывает технические атрибуты (0-100) в зависимости от позиции игрока."""
     is_goalkeeper = 'В' in str(positions)
 
     attrs = models.GK_TECHNICAL_ATTRS if is_goalkeeper else models.OUTFIELD_TECHNICAL_ATTRS
@@ -36,20 +179,73 @@ def calculate_technical(positions: str, cols: list, col_indices: dict) -> float:
             try:
                 values.append(int(val_str))
             except ValueError:
-                pass  # Пропускаем, если значение не числовое (например, "-")
+                pass
 
     if not values:
         return 0.0
 
-    # Среднее арифметическое (диапазон 1-20) переводим в диапазон 0-100
     avg_20 = sum(values) / len(values)
     return round(avg_20 * 5, 2)
+
+
+def calculate_mental(cols: list, col_indices: dict) -> float:
+    """Рассчитывает психологические атрибуты по взвешенной формуле (0-100)."""
+    total_score = 0.0
+
+    for group_name, group_data in models.MENTAL_GROUPS.items():
+        weight = group_data['weight']
+        attrs = group_data['attrs']
+
+        values = []
+        for attr in attrs:
+            if attr in col_indices:
+                val_str = cols[col_indices[attr]].get_text(strip=True)
+                try:
+                    values.append(int(val_str))
+                except ValueError:
+                    pass
+
+        if values:
+            group_avg = sum(values) / len(values)
+            total_score += weight * group_avg
+
+    return round(total_score * 5, 2)
+
+
+def calculate_physical(cols: list, col_indices: dict) -> float:
+    """Рассчитывает физические атрибуты по взвешенной формуле (0-100)."""
+    total_score = 0.0
+
+    for group_name, group_data in models.PHYSICAL_GROUPS.items():
+        weight = group_data['weight']
+        attrs = group_data['attrs']
+
+        values = []
+        for attr in attrs:
+            if attr in col_indices:
+                val_str = cols[col_indices[attr]].get_text(strip=True)
+                try:
+                    values.append(int(val_str))
+                except ValueError:
+                    pass
+
+        if values:
+            group_avg = sum(values) / len(values)
+            total_score += weight * group_avg
+
+    return round(total_score * 5, 2)
+
+
+def calculate_ovr(physical: float, mental: float, technical: float) -> float:
+    """Рассчитывает Общий Рейтинг Игрока (ОВР). Физ: 45%, Псих: 25%, Тех: 30%."""
+    ovr = 0.45 * physical + 0.25 * mental + 0.30 * technical
+    return round(ovr, 2)
 
 
 def parse_squad(html_path: str) -> pd.DataFrame:
     """Парсит HTML таблицу из Football Manager и извлекает данные игроков."""
     print(f"📖 Чтение файла: {html_path}")
-    print(f"📦 Размер файла: {os.path.getsize(html_path) / 1024:.2f} КБ")
+    print(f" Размер файла: {os.path.getsize(html_path) / 1024:.2f} КБ")
 
     with open(html_path, 'r', encoding='utf-8') as f:
         soup = BeautifulSoup(f, config.HTML_PARSER)
@@ -67,7 +263,7 @@ def parse_squad(html_path: str) -> pd.DataFrame:
     # Получаем заголовки и индексы колонок
     headers = [th.get_text(strip=True) for th in rows[0].find_all(['th', 'td'])]
 
-    # Собираем индексы для базовых колонок и всех атрибутов
+    # Собираем индексы для всех нужных атрибутов
     all_needed_attrs = (models.GK_TECHNICAL_ATTRS +
                         models.OUTFIELD_TECHNICAL_ATTRS +
                         models.ALL_MENTAL_ATTRS +
@@ -97,7 +293,8 @@ def parse_squad(html_path: str) -> pd.DataFrame:
 
             # 2. Рассчитываем "Технические"
             positions_val = row_data.get('Позиции', '')
-            row_data['Технические'] = calculate_technical(positions_val, cols, col_indices)
+            technical = calculate_technical(positions_val, cols, col_indices)
+            row_data['Технические'] = technical
 
             # 3. Рассчитываем "Психологические"
             mental = calculate_mental(cols, col_indices)
@@ -107,11 +304,25 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             physical = calculate_physical(cols, col_indices)
             row_data['Физические'] = physical
 
-            # 5. Рассчитываем "Технические" (уже есть выше, получаем значение)
-            technical = row_data['Технические']
+            # 5. Рассчитываем "ОВР"
+            ovr = calculate_ovr(physical, mental, technical)
+            row_data['ОВР'] = ovr
 
-            # 6. Рассчитываем "ОВР"
-            row_data['ОВР'] = calculate_ovr(physical, mental, technical)
+            # 6. Рассчитываем "Цена / Качество"
+            transfer_str = row_data.get('Сумма транфера', '')
+            transfer_value = parse_money_value(transfer_str)
+
+            salary_str = row_data.get('Зарплата', '')
+            salary_value = parse_money_value(salary_str)
+
+            age_str = row_data.get('Возраст', '0')
+            try:
+                age = int(age_str)
+            except ValueError:
+                age = 20
+
+            price_quality = calculate_price_quality(ovr, transfer_value, salary_value, age)
+            row_data['Цена / Качество'] = price_quality
 
             data.append(row_data)
 
@@ -121,68 +332,3 @@ def parse_squad(html_path: str) -> pd.DataFrame:
     print(f"✅ Парсинг завершен. Обработано строк: {len(data)}")
 
     return pd.DataFrame(data, columns=models.ALL_COLUMNS)
-
-def calculate_mental(cols: list, col_indices: dict) -> float:
-    """
-    Рассчитывает психологические атрибуты по взвешенной формуле.
-    Результат в диапазоне 0-100.
-    """
-    total_score = 0.0
-
-    for group_name, group_data in models.MENTAL_GROUPS.items():
-        weight = group_data['weight']
-        attrs = group_data['attrs']
-
-        # Собираем значения атрибутов группы
-        values = []
-        for attr in attrs:
-            if attr in col_indices:
-                val_str = cols[col_indices[attr]].get_text(strip=True)
-                try:
-                    values.append(int(val_str))
-                except ValueError:
-                    pass  # Пропускаем нечисловые значения
-
-        if values:
-            # Среднее по группе (в диапазоне 1-20)
-            group_avg = sum(values) / len(values)
-            # Умножаем на вес группы
-            total_score += weight * group_avg
-
-    # Переводим из диапазона 1-20 в 0-100
-    return round(total_score * 5, 2)
-
-def calculate_physical(cols: list, col_indices: dict) -> float:
-    """
-    Рассчитывает физические атрибуты по взвешенной формуле.
-    Результат в диапазоне 0-100.
-    """
-    total_score = 0.0
-
-    for group_name, group_data in models.PHYSICAL_GROUPS.items():
-        weight = group_data['weight']
-        attrs = group_data['attrs']
-
-        values = []
-        for attr in attrs:
-            if attr in col_indices:
-                val_str = cols[col_indices[attr]].get_text(strip=True)
-                try:
-                    values.append(int(val_str))
-                except ValueError:
-                    pass
-
-        if values:
-            group_avg = sum(values) / len(values)
-            total_score += weight * group_avg
-
-    return round(total_score * 5, 2)
-
-def calculate_ovr(physical: float, mental: float, technical: float) -> float:
-    """
-    Рассчитывает Общий Рейтинг Игрока (ОВР) по взвешенной формуле.
-    Физ: 45%, Псих: 25%, Тех: 30%.
-    Результат в диапазоне 0-100.
-    """
-    ovr = 0.45 * physical + 0.25 * mental + 0.30 * technical
-    return round(ovr, 2)

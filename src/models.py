@@ -14,11 +14,11 @@ BASE_COLUMNS = [
 
 # Дополнительные колонки
 EXTRA_COLUMNS = [
-    'Ликвидность',
+    'Цена / Качество',
     'Технические',
     'Психологические',
     'Физические',
-    'ОВР'
+    'ОВР',
 ]
 
 # Все колонки итогового DataFrame
@@ -53,64 +53,57 @@ OUTFIELD_TECHNICAL_ATTRS = [
 ]
 
 # --- ПСИХОЛОГИЧЕСКИЕ АТРИБУТЫ (с весами) ---
-
-# Группы атрибутов и их веса
 MENTAL_GROUPS = {
     'group_1': {
         'weight': 0.25,
-        'attrs': ['Инт', 'Кнц', 'Вид']  # AA, AC, W
+        'attrs': ['Инт', 'Кнц', 'Вид']
     },
     'group_2': {
         'weight': 0.25,
-        'attrs': ['Раб', 'Реш', 'Ком', 'Лид']  # AF, AG, AB, AD
+        'attrs': ['Раб', 'Реш', 'Ком', 'Лид']
     },
     'group_3': {
         'weight': 0.20,
-        'attrs': ['ПРш', 'Смб', 'Имп']  # AE, AH, Z
+        'attrs': ['ПРш', 'Смб', 'Имп']
     },
     'group_4': {
         'weight': 0.15,
-        'attrs': ['Хрб', 'Агр']  # AI, V
+        'attrs': ['Хрб', 'Агр']
     },
     'group_5': {
         'weight': 0.15,
-        'attrs': ['Ибм', 'Поз']  # Y, X
+        'attrs': ['Ибм', 'Поз']
     }
 }
 
-# Все психологические атрибуты (для поиска индексов)
 ALL_MENTAL_ATTRS = []
 for group in MENTAL_GROUPS.values():
     ALL_MENTAL_ATTRS.extend(group['attrs'])
 
-
 # --- ФИЗИЧЕСКИЕ АТРИБУТЫ (с весами) ---
-# Диапазон колонок: AJ - AQ (8 атрибутов)
-
 PHYSICAL_GROUPS = {
     'group_1': {
         'weight': 0.30,
-        'attrs': ['Скр', 'Уск']  # AP, AQ - скорость, ускорение
+        'attrs': ['Скр', 'Уск']
     },
     'group_2': {
         'weight': 0.20,
-        'attrs': ['Лвк', 'ПРГ']  # AM, AL - ловкость, высота прыжка
+        'attrs': ['Лвк', 'ПРГ']
     },
     'group_3': {
         'weight': 0.15,
-        'attrs': ['ВЫН']  # AJ - выносливость
+        'attrs': ['ВЫН']
     },
     'group_4': {
         'weight': 0.20,
-        'attrs': ['СИЛ', 'КРД']  # AO, AK - сила, координация (прыжка)
+        'attrs': ['СИЛ', 'КРД']
     },
     'group_5': {
         'weight': 0.15,
-        'attrs': ['ПРД']  # AN - природные данные
+        'attrs': ['ПРД']
     }
 }
 
-# Все физические атрибуты (для поиска индексов)
 ALL_PHYSICAL_ATTRS = []
 for group in PHYSICAL_GROUPS.values():
     ALL_PHYSICAL_ATTRS.extend(group['attrs'])
