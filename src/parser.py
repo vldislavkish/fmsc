@@ -70,7 +70,8 @@ def parse_squad(html_path: str) -> pd.DataFrame:
     # Собираем индексы для базовых колонок и всех атрибутов
     all_needed_attrs = (models.GK_TECHNICAL_ATTRS +
                         models.OUTFIELD_TECHNICAL_ATTRS +
-                        models.ALL_MENTAL_ATTRS)
+                        models.ALL_MENTAL_ATTRS +
+                        models.ALL_PHYSICAL_ATTRS)
     all_cols_to_find = models.BASE_COLUMNS + all_needed_attrs
 
     col_indices = {}
@@ -101,8 +102,8 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             # 3. Рассчитываем "Психологические"
             row_data['Психологические'] = calculate_mental(cols, col_indices)
 
-            # 4. Заглушка для "Физические"
-            row_data['Физические'] = ''
+            # 4. Рассчитываем "Физические"
+            row_data['Физические'] = calculate_physical(cols, col_indices)
 
             # 5. Заглушка для "Ликвидность"
             row_data['Ликвидность'] = ''
@@ -144,4 +145,30 @@ def calculate_mental(cols: list, col_indices: dict) -> float:
             total_score += weight * group_avg
 
     # Переводим из диапазона 1-20 в 0-100
+    return round(total_score * 5, 2)
+
+def calculate_physical(cols: list, col_indices: dict) -> float:
+    """
+    Рассчитывает физические атрибуты по взвешенной формуле.
+    Результат в диапазоне 0-100.
+    """
+    total_score = 0.0
+
+    for group_name, group_data in models.PHYSICAL_GROUPS.items():
+        weight = group_data['weight']
+        attrs = group_data['attrs']
+
+        values = []
+        for attr in attrs:
+            if attr in col_indices:
+                val_str = cols[col_indices[attr]].get_text(strip=True)
+                try:
+                    values.append(int(val_str))
+                except ValueError:
+                    pass
+
+        if values:
+            group_avg = sum(values) / len(values)
+            total_score += weight * group_avg
+
     return round(total_score * 5, 2)

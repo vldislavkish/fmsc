@@ -81,3 +81,35 @@ MENTAL_GROUPS = {
 ALL_MENTAL_ATTRS = []
 for group in MENTAL_GROUPS.values():
     ALL_MENTAL_ATTRS.extend(group['attrs'])
+
+
+# --- ФИЗИЧЕСКИЕ АТРИБУТЫ (с весами) ---
+# Диапазон колонок: AJ - AQ (8 атрибутов)
+
+PHYSICAL_GROUPS = {
+    'group_1': {
+        'weight': 0.30,
+        'attrs': ['Скр', 'Уск']  # AP, AQ - скорость, ускорение
+    },
+    'group_2': {
+        'weight': 0.20,
+        'attrs': ['Лвк', 'ПРГ']  # AM, AL - ловкость, высота прыжка
+    },
+    'group_3': {
+        'weight': 0.15,
+        'attrs': ['ВЫН']  # AJ - выносливость
+    },
+    'group_4': {
+        'weight': 0.20,
+        'attrs': ['СИЛ', 'КРД']  # AO, AK - сила, координация (прыжка)
+    },
+    'group_5': {
+        'weight': 0.15,
+        'attrs': ['ПРД']  # AN - природные данные
+    }
+}
+
+# Все физические атрибуты (для поиска индексов)
+ALL_PHYSICAL_ATTRS = []
+for group in PHYSICAL_GROUPS.values():
+    ALL_PHYSICAL_ATTRS.extend(group['attrs'])
