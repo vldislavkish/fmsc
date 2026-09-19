@@ -53,8 +53,11 @@ def parse_single_money(value_str: str) -> float:
     if not value_str:
         return None
 
-    # Убираем символы валюты и пробелы
-    value_str = value_str.replace('€', '').replace(' ', '').strip()
+    # Убираем текст "в год", "в неделю" и т.д.
+    value_str = value_str.split('в')[0].strip() if 'в' in value_str else value_str
+
+    # Убираем символы валюты, пробелы и запятые (разделители тысяч)
+    value_str = value_str.replace('€', '').replace(' ', '').replace(',', '').strip()
 
     # Определяем множитель
     multiplier = 1
@@ -287,9 +290,18 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             # 1. Извлекаем базовые данные
             for col_name in models.BASE_COLUMNS:
                 if col_name in col_indices:
-                    row_data[col_name] = cols[col_indices[col_name]].get_text(strip=True)
+                    val = cols[col_indices[col_name]].get_text(strip=True)
+
+                    # Конвертируем возраст в число
+                    if col_name == 'Возраст':
+                        try:
+                            val = int(val)
+                        except ValueError:
+                            val = 0
+
+                    row_data[col_name] = val
                 else:
-                    row_data[col_name] = ''
+                    row_data[col_name] = '' if col_name != 'Возраст' else 0
 
             # 2. Рассчитываем "Технические"
             positions_val = row_data.get('Позиции', '')
