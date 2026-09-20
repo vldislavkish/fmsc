@@ -3,72 +3,109 @@
 """
 import os
 import pandas as pd
+from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.properties import Outline
 from src import config
 
 
 def ensure_directory(directory: str) -> None:
-    """
-    Создает директорию, если она не существует.
-
-    Args:
-        directory: Путь к директории
-    """
+    """Создает директорию, если она не существует."""
     os.makedirs(directory, exist_ok=True)
 
 
-def save_to_csv(df: pd.DataFrame, output_path: str) -> None:
+def save_to_excel_formatted(df: pd.DataFrame, output_path: str) -> None:
     """
-    Сохраняет DataFrame в CSV файл.
-
-    Args:
-        df: DataFrame для сохранения
-        output_path: Путь к выходному файлу
+    Сохраняет DataFrame в Excel файл с автоматическим форматированием:
+    - Закрепление столбцов A-K
+    - Группировка столбцов M-P (вратарские роли)
+    - Автофильтр
+    - Стилизация заголовков
+    - Фиксированная ширина столбцов
     """
-    df.to_csv(
-        output_path,
-        index=False,
-        encoding=config.CSV_ENCODING,
-        sep=config.CSV_SEPARATOR
-    )
-    print(f"💾 CSV сохранен: {output_path}")
+    print(f"🎨 Применяется форматирование Excel...")
 
+    with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name='Игроки', index=False)
+        ws = writer.sheets['Игроки']
 
-def save_to_excel(df: pd.DataFrame, output_path: str) -> None:
-    """
-    Сохраняет DataFrame в Excel файл.
+        # 1. Закрепление столбцов A-K включительно
+        ws.freeze_panes = 'L2'
 
-    Args:
-        df: DataFrame для сохранения
-        output_path: Путь к выходному файлу
-    """
-    df.to_excel(
-        output_path,
-        index=False,
-        engine=config.EXCEL_ENGINE
-    )
-    print(f"💾 Excel сохранен: {output_path}")
+        # 2. Группировка столбцов M-P включительно (вратарские роли)
+        # Группируем колонки M, N, O, P
+        for col in ['M', 'N', 'O', 'P']:
+            ws.column_dimensions[col].outline_level = 1
+            ws.column_dimensions[col].hidden = False
+
+        # 3. Включение автофильтра на всю таблицу
+        ws.auto_filter.ref = ws.dimensions
+
+        # 4. Стилизация заголовков (первая строка)
+        header_fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
+        header_font = Font(bold=True, color='FFFFFF', size=11)
+        header_alignment = Alignment(
+            horizontal='center',
+            vertical='center',
+            wrap_text=True
+        )
+
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+
+        # Высота первой строки для корректного отображения переноса
+        ws.row_dimensions[1].height = 30
+
+        # 5. Фиксированная ширина столбцов
+        column_widths = {
+            'A': 12,  # Позиции
+            'B': 8,   # Возраст
+            'C': 25,  # Имя
+            'D': 18,  # Зарплата
+            'E': 20,  # Сумма транфера
+            'F': 20,  # Характер
+        }
+
+        # Центрирование для столбца B
+        center_alignment = Alignment(horizontal='center', vertical='center')
+
+        for col_idx in range(1, len(df.columns) + 1):
+            col_letter = get_column_letter(col_idx)
+
+            # Устанавливаем ширину
+            if col_letter in column_widths:
+                ws.column_dimensions[col_letter].width = column_widths[col_letter]
+            else:
+                # G и далее = 8
+                ws.column_dimensions[col_letter].width = 8
+
+            # Центрирование столбца B (Возраст)
+            if col_letter == 'B':
+                for row in range(2, ws.max_row + 1):
+                    ws[f'{col_letter}{row}'].alignment = center_alignment
+
+            # Форматирование числовых столбцов (G и далее)
+            if col_letter >= 'G':
+                for row in range(2, ws.max_row + 1):
+                    cell = ws[f'{col_letter}{row}']
+                    cell.number_format = '0.00'
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    print(f"💾 Excel с форматированием сохранен: {output_path}")
 
 
 def save_results(df: pd.DataFrame, base_name: str = None) -> None:
-    """
-    Сохраняет результаты во всех форматах.
-
-    Args:
-        df: DataFrame для сохранения
-        base_name: Базовое имя файла (без расширения)
-    """
+    """Сохраняет результаты только в Excel формате."""
     if base_name is None:
         base_name = config.DEFAULT_OUTPUT_NAME
 
     ensure_directory(config.OUTPUT_DIR)
 
-    # Сохраняем в CSV
-    csv_path = os.path.join(config.OUTPUT_DIR, f'{base_name}.csv')
-    save_to_csv(df, csv_path)
-
-    # Сохраняем в Excel
+    # Сохраняем только в форматированный Excel
     xlsx_path = os.path.join(config.OUTPUT_DIR, f'{base_name}.xlsx')
-    save_to_excel(df, xlsx_path)
+    save_to_excel_formatted(df, xlsx_path)
 
     print(f"\n📊 Итого строк: {len(df)}")
     print(f"📊 Итого столбцов: {len(df.columns)}")
