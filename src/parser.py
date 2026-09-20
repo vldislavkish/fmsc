@@ -377,20 +377,25 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             row_data['Цена / Качество'] = price_quality
 
             # 7. Рассчитываем роли вратарей (если игрок вратарь)
-            positions = row_data.get('Позиции', '')
-            if 'В' in str(positions):  # Если игрок вратарь
+            if 'В' in str(positions_val):
                 from src.roles import Goalkeeper
 
-                # Передаём полный словарь cols и col_indices для доступа к атрибутам
-                row_data['Вратарь (Зщ)'] = Goalkeeper.defender(row_data)
-                row_data['Вратарь-чистильщик (Зщ)'] = Goalkeeper.sweeper_keeper_defend(row_data)
-                row_data['Вратарь-чистильщик (По)'] = Goalkeeper.sweeper_keeper_support(row_data)
-                row_data['Вратарь-чистильщик (Ат)'] = Goalkeeper.sweeper_keeper_attack(row_data)
+                # Сначала рассчитываем все 4 роли и сохраняем в переменные
+                gk_def = Goalkeeper.defender(row_data)
+                sk_def = Goalkeeper.sweeper_keeper_defend(row_data)
+                sk_sup = Goalkeeper.sweeper_keeper_support(row_data)
+                sk_att = Goalkeeper.sweeper_keeper_attack(row_data)
 
-                # Базовый "Вратарь" - пока заглушка (будет средним позже)
-                row_data['Вратарь'] = row_data['Вратарь (Зщ)']
+                # Записываем их в соответствующие столбцы
+                row_data['Вратарь (Зщ)'] = gk_def
+                row_data['Вратарь-чистильщик (Зщ)'] = sk_def
+                row_data['Вратарь-чистильщик (По)'] = sk_sup
+                row_data['Вратарь-чистильщик (Ат)'] = sk_att
+
+                # Базовый "Вратарь" = среднее арифметическое всех 4 ролей
+                row_data['Вратарь'] = round((gk_def + sk_def + sk_sup + sk_att) / 4, 2)
             else:
-                # Для полевых игроков ставим 0
+                # Для полевых игроков ставим 0 во всех вратарских столбцах
                 row_data['Вратарь'] = 0.0
                 row_data['Вратарь (Зщ)'] = 0.0
                 row_data['Вратарь-чистильщик (Зщ)'] = 0.0
