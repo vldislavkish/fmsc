@@ -407,6 +407,48 @@ def parse_squad(html_path: str) -> pd.DataFrame:
                 row_data['Вратарь-чистильщик (По)'] = 0.0
                 row_data['Вратарь-чистильщик (Ат)'] = 0.0
 
+            # 8. Рассчитываем роли центрального защитника (если игрок ЦЗ)
+            from src.roles import CenterBack
+
+            is_center_back = 'Ц' in str(positions_val) and 'З' in str(positions_val)
+
+            if is_center_back:
+                row_data['ЦЗ (ОВР)'] = CenterBack.overall(row_data)
+
+                # Созидательный защитник
+                row_data['Созидательный защитник (Зщ)'] = CenterBack.ball_playing_defend(row_data)
+                row_data['Созидательный защитник (Бл)'] = CenterBack.ball_playing_stop(row_data)
+                row_data['Созидательный защитник (Пс)'] = CenterBack.ball_playing_cover(row_data)
+                row_data['Созидательный защитник (ОВР)'] = CenterBack.ball_playing_overall(row_data)
+
+                # Либеро (заглушки)
+                row_data['Либеро (ОВР)'] = CenterBack.libero_overall(row_data)
+                row_data['Либеро (По)'] = CenterBack.libero_support(row_data)
+                row_data['Либеро (Ат)'] = CenterBack.libero_attack(row_data)
+
+                # Крайний центральный защитник (заглушки)
+                row_data['Крайний центральный защитник (ОВР)'] = CenterBack.wide_center_back_overall(row_data)
+                row_data['Крайний центральный защитник (Зщ)'] = CenterBack.wide_center_back_defend(row_data)
+                row_data['Крайний центральный защитник (По)'] = CenterBack.wide_center_back_support(row_data)
+                row_data['Крайний центральный защитник (Ат)'] = CenterBack.wide_center_back_attack(row_data)
+
+                # Центральный защитник (заглушки)
+                row_data['Центральный защитник (ОВР)'] = CenterBack.central_defender_overall(row_data)
+                row_data['Центральный защитник (Зщ)'] = CenterBack.central_defender_defend(row_data)
+                row_data['Центральный защитник (Бл)'] = CenterBack.central_defender_stop(row_data)
+                row_data['Центральный защитник (Пс)'] = CenterBack.central_defender_cover(row_data)
+
+                # Чистый центральный защитник (заглушки)
+                row_data['Чистый центральный защитник (ОВР)'] = CenterBack.no_nonsense_overall(row_data)
+                row_data['Чистый центральный защитник (Зщ)'] = CenterBack.no_nonsense_defend(row_data)
+                row_data['Чистый центральный защитник (Бл)'] = CenterBack.no_nonsense_stop(row_data)
+                row_data['Чистый центральный защитник (Пс)'] = CenterBack.no_nonsense_cover(row_data)
+            else:
+                # Для не-ЦЗ игроков ставим 0.0
+                for col in models.CENTER_BACK_COLUMNS:
+                    if col not in row_data:
+                        row_data[col] = 0.0
+
             data.append(row_data)
         else:
             skipped += 1
