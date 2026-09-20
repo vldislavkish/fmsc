@@ -115,22 +115,7 @@ def calculate_price_quality(ovr: float, transfer_value: float,
                             salary: float, age: int) -> float:
     """
     Рассчитывает показатель "Цена / Качество" (0-100).
-
-    Формула:
-      Базовый_скор = ОВР × коэф_возраста
-      Если стоимость > 0:
-        Цена/Качество = Базовый_скор / (1 + log10(стоимость / 1_000_000))
-      Иначе:
-        Цена/Качество = Базовый_скор
-
-    Args:
-        ovr: Общий рейтинг игрока (0-100)
-        transfer_value: Сумма трансфера (евро)
-        salary: Годовая зарплата (евро)
-        age: Возраст игрока
-
-    Returns:
-        Числовое значение 0-100
+    Чем ВЫШЕ показатель, тем ЛУЧШЕ трансфер.
     """
     import math
 
@@ -140,25 +125,36 @@ def calculate_price_quality(ovr: float, transfer_value: float,
     # Базовый рейтинг (0-100)
     base_score = ovr * age_coeff
 
-    # Если игрок не продаётся или стоимость = 0
-    if transfer_value is None or transfer_value <= 0:
-        if salary is None or salary <= 0:
-            # Полностью бесплатный игрок
-            return round(base_score, 2)
-        else:
-            # Только зарплата
-            total_cost = salary * 2
-    else:
-        # Стоимость = трансфер + 2 года зарплаты
-        total_cost = transfer_value + (salary * 2 if salary else 0)
+    # Если игрок не продаётся
+    if transfer_value is None:
+        return 0.0
 
-    # Если общая стоимость всё ещё 0
-    if total_cost <= 0:
-        return round(base_score, 2)
+    # Если зарплата не указана - считаем как 0
+    if salary is None:
+        salary = 0.0
+
+    # Общая стоимость (трансфер + 2 года зарплаты)
+    total_cost = transfer_value + (salary * 2)
+
+    # Защита от деления на ноль и слишком маленьких значений
+    # Минимальная стоимость для расчёта - €100,000
+    MIN_COST = 100_000
+
+    if total_cost < MIN_COST:
+        # Если игрок почти бесплатный, используем упрощённую формулу
+        # Максимум 80 для бесплатных игроков с высоким ОВР
+        free_player_score = base_score * 0.8
+        return round(min(80.0, free_player_score), 2)
 
     # Логарифмическое масштабирование
-    # log10(стоимость в миллионах) + 1
-    cost_factor = 1 + math.log10(total_cost / 1_000_000)
+    cost_in_millions = total_cost / 1_000_000
+
+    # ИСПРАВЛЕНИЕ: используем max(1, cost_in_millions) чтобы log10 никогда не был отрицательным
+    cost_factor = 1 + math.log10(max(1, cost_in_millions))
+
+    # Дополнительная защита от деления на ноль
+    if cost_factor <= 0:
+        cost_factor = 1.0
 
     # Финальный рейтинг
     final_score = base_score / cost_factor
