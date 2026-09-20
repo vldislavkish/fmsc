@@ -2,6 +2,7 @@
 Вспомогательные утилиты проекта FMSC
 """
 import os
+import math
 import pandas as pd
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
@@ -33,7 +34,6 @@ def save_to_excel_formatted(df: pd.DataFrame, output_path: str) -> None:
         ws.freeze_panes = 'L2'
 
         # 2. Группировка столбцов M-P включительно (вратарские роли)
-        # Группируем колонки M, N, O, P
         for col in ['M', 'N', 'O', 'P']:
             ws.column_dimensions[col].outline_level = 1
             ws.column_dimensions[col].hidden = False
@@ -68,11 +68,20 @@ def save_to_excel_formatted(df: pd.DataFrame, output_path: str) -> None:
             'F': 20,  # Характер
         }
 
+        # Списки колонок для форматирования
+        money_cols = ['Зарплата (€)', 'Сумма трансфера (€)']
+        rating_cols = [
+            'Цена / Качество', 'Технические', 'Психологические', 'Физические', 'ОВР',
+            'Вратарь', 'Вратарь (Зщ)', 'Вратарь-чистильщик (Зщ)',
+            'Вратарь-чистильщик (По)', 'Вратарь-чистильщик (Ат)'
+        ]
+
         # Центрирование для столбца B
         center_alignment = Alignment(horizontal='center', vertical='center')
 
         for col_idx in range(1, len(df.columns) + 1):
             col_letter = get_column_letter(col_idx)
+            col_name = df.columns[col_idx - 1]
 
             # Устанавливаем ширину
             if col_letter in column_widths:
@@ -86,11 +95,21 @@ def save_to_excel_formatted(df: pd.DataFrame, output_path: str) -> None:
                 for row in range(2, ws.max_row + 1):
                     ws[f'{col_letter}{row}'].alignment = center_alignment
 
-            # Форматирование числовых столбцов (G и далее)
-            if col_letter >= 'G':
+            # Форматирование числовых столбцов
+            if col_name in money_cols:
+                # Формат валюты для зарплат и трансферов
                 for row in range(2, ws.max_row + 1):
                     cell = ws[f'{col_letter}{row}']
-                    cell.number_format = '0.00'
+                    cell.number_format = '€#,##0'
+                    cell.alignment = Alignment(horizontal='right', vertical='center')
+
+            elif col_name in rating_cols:
+                # Формат 0.00 для рейтингов
+                for row in range(2, ws.max_row + 1):
+                    cell = ws[f'{col_letter}{row}']
+                    # NaN оставляем пустыми (не трогаем формат)
+                    if cell.value is not None and not (isinstance(cell.value, float) and math.isnan(cell.value)):
+                        cell.number_format = '0.00'
                     cell.alignment = Alignment(horizontal='center', vertical='center')
 
     print(f"💾 Excel с форматированием сохранен: {output_path}")
@@ -108,5 +127,5 @@ def save_results(df: pd.DataFrame, base_name: str = None) -> None:
     save_to_excel_formatted(df, xlsx_path)
 
     print(f"\n📊 Итого строк: {len(df)}")
-    print(f"📊 Итого столбцов: {len(df.columns)}")
+    print(f" Итого столбцов: {len(df.columns)}")
     print(f"📋 Колонки: {list(df.columns)}")

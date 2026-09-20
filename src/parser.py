@@ -116,18 +116,14 @@ def calculate_price_quality(ovr: float, transfer_value: float,
     """
     Рассчитывает показатель "Цена / Качество" (0-100).
     Чем ВЫШЕ показатель, тем ЛУЧШЕ трансфер.
+
+    Если игрок не продаётся (transfer_value is None или NaN) — возвращает NaN.
     """
     import math
 
-    # Коэффициент возраста
-    age_coeff = calculate_age_coefficient(age)
-
-    # Базовый рейтинг (0-100)
-    base_score = ovr * age_coeff
-
-    # Если игрок не продаётся
-    if transfer_value is None:
-        return 0.0
+    # Если игрок не продаётся — возвращаем NaN
+    if transfer_value is None or (isinstance(transfer_value, float) and math.isnan(transfer_value)):
+        return float('nan')
 
     # Если зарплата не указана - считаем как 0
     if salary is None:
@@ -136,25 +132,21 @@ def calculate_price_quality(ovr: float, transfer_value: float,
     # Общая стоимость (трансфер + 2 года зарплаты)
     total_cost = transfer_value + (salary * 2)
 
-    # Защита от деления на ноль и слишком маленьких значений
-    # Минимальная стоимость для расчёта - €100,000
-    MIN_COST = 100_000
+    # Защита от деления на ноль
+    if total_cost <= 0:
+        # Бесплатный игрок — максимальный базовый рейтинг
+        age_coeff = calculate_age_coefficient(age)
+        return round(ovr * age_coeff, 2)
 
-    if total_cost < MIN_COST:
-        # Если игрок почти бесплатный, используем упрощённую формулу
-        # Максимум 80 для бесплатных игроков с высоким ОВР
-        free_player_score = base_score * 0.8
-        return round(min(80.0, free_player_score), 2)
+    # Коэффициент возраста
+    age_coeff = calculate_age_coefficient(age)
+
+    # Базовый рейтинг (ОВР × коэф. возраста)
+    base_score = ovr * age_coeff
 
     # Логарифмическое масштабирование
     cost_in_millions = total_cost / 1_000_000
-
-    # ИСПРАВЛЕНИЕ: используем max(1, cost_in_millions) чтобы log10 никогда не был отрицательным
     cost_factor = 1 + math.log10(max(1, cost_in_millions))
-
-    # Дополнительная защита от деления на ноль
-    if cost_factor <= 0:
-        cost_factor = 1.0
 
     # Финальный рейтинг
     final_score = base_score / cost_factor
@@ -364,15 +356,28 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             ovr = calculate_ovr(physical, mental, technical)
             row_data['ОВР'] = ovr
 
-            # 6. Рассчитываем "Цена / Качество"
+            # 5.5. Парсим зарплату и трансфер в числа для сортировки
+            salary_str = row_data.get('Зарплата', '')
+            salary_value = parse_money_value(salary_str)
+            row_data['Зарплата (€)'] = salary_value if salary_value else 0.0
+
             transfer_str = row_data.get('Сумма транфера', '')
             transfer_value = parse_money_value(transfer_str)
 
-            salary_str = row_data.get('Зарплата', '')
-            salary_value = parse_money_value(salary_str)
+            # Сохраняем трансфер как число (NaN если не продаётся)
+            if transfer_value is None:
+                row_data['Сумма трансфера (€)'] = float('nan')
+            else:
+                row_data['Сумма трансфера (€)'] = transfer_value
 
-            age = row_data.get('Возраст', 20)
+            # ✅ Парсинг возраста (обязательно до calculate_price_quality)
+            age_str = row_data.get('Возраст', '0')
+            try:
+                age = int(age_str)
+            except (ValueError, TypeError):
+                age = 20
 
+            # 6. Рассчитываем "Цена / Качество"
             price_quality = calculate_price_quality(ovr, transfer_value, salary_value, age)
             row_data['Цена / Качество'] = price_quality
 
