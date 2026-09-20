@@ -244,7 +244,7 @@ def calculate_ovr(physical: float, mental: float, technical: float) -> float:
 def parse_squad(html_path: str) -> pd.DataFrame:
     """Парсит HTML таблицу из Football Manager и извлекает данные игроков."""
     print(f"📖 Чтение файла: {html_path}")
-    print(f" Размер файла: {os.path.getsize(html_path) / 1024:.2f} КБ")
+    print(f"📦 Размер файла: {os.path.getsize(html_path) / 1024:.2f} КБ")
 
     with open(html_path, 'r', encoding='utf-8') as f:
         soup = BeautifulSoup(f, config.HTML_PARSER)
@@ -259,8 +259,37 @@ def parse_squad(html_path: str) -> pd.DataFrame:
 
     print(f"📊 Найдено строк в таблице: {len(rows) - 1}")
 
-    # Получаем заголовки и индексы колонок
-    headers = [th.get_text(strip=True) for th in rows[0].find_all(['th', 'td'])]
+    # Получаем заголовки из первой строки
+    first_row = rows[0]
+    headers = [th.get_text(strip=True) for th in first_row.find_all(['th', 'td'])]
+
+    print(f"\n🔍 Заголовки таблицы (первые 20):")
+    for i, h in enumerate(headers[:20]):
+        print(f"  [{i}] {h}")
+
+    # Ищем индексы базовых колонок
+    col_indices = {}
+    for col in models.BASE_COLUMNS:
+        found = False
+        for i, h in enumerate(headers):
+            if h == col or col.lower() in h.lower():
+                col_indices[col] = i
+                found = True
+                break
+        if not found:
+            print(f"️  Колонка '{col}' НЕ НАЙДЕНА в заголовках!")
+
+    print(f"\n📋 Найденные индексы колонок: {col_indices}")
+
+    if not col_indices:
+        raise ValueError("Не удалось найти ни одну базовую колонку в таблице!")
+
+    # Проверяем первую строку данных
+    if len(rows) > 1:
+        sample_cols = rows[1].find_all(['td', 'th'])
+        print(f"\n🔍 Пример первой строки данных ({len(sample_cols)} ячеек):")
+        for i, cell in enumerate(sample_cols[:10]):
+            print(f"  [{i}] {cell.get_text(strip=True)}")
 
     # Собираем индексы для всех нужных атрибутов
     all_needed_attrs = (models.GK_TECHNICAL_ATTRS +
@@ -269,14 +298,15 @@ def parse_squad(html_path: str) -> pd.DataFrame:
                         models.ALL_PHYSICAL_ATTRS)
     all_cols_to_find = models.BASE_COLUMNS + all_needed_attrs
 
-    col_indices = {}
     for col in all_cols_to_find:
-        for i, h in enumerate(headers):
-            if h == col or col.lower() in h.lower():
-                col_indices[col] = i
-                break
+        if col not in col_indices:
+            for i, h in enumerate(headers):
+                if h == col or col.lower() in h.lower():
+                    col_indices[col] = i
+                    break
 
     data = []
+    skipped = 0
     for idx, row in enumerate(rows[1:], 1):
         cols = row.find_all(['td', 'th'])
 
@@ -298,6 +328,24 @@ def parse_squad(html_path: str) -> pd.DataFrame:
                     row_data[col_name] = val
                 else:
                     row_data[col_name] = '' if col_name != 'Возраст' else 0
+
+            # 1.5. Сохраняем все атрибуты для расчёта ролей
+            all_attributes = (
+                    models.GK_TECHNICAL_ATTRS +
+                    models.OUTFIELD_TECHNICAL_ATTRS +
+                    models.ALL_MENTAL_ATTRS +
+                    models.ALL_PHYSICAL_ATTRS
+            )
+
+            for attr in all_attributes:
+                if attr in col_indices:
+                    val_str = cols[col_indices[attr]].get_text(strip=True)
+                    try:
+                        row_data[attr] = int(val_str)
+                    except ValueError:
+                        row_data[attr] = 0
+                else:
+                    row_data[attr] = 0
 
             # 2. Рассчитываем "Технические"
             positions_val = row_data.get('Позиции', '')
@@ -323,20 +371,39 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             salary_str = row_data.get('Зарплата', '')
             salary_value = parse_money_value(salary_str)
 
-            age_str = row_data.get('Возраст', '0')
-            try:
-                age = int(age_str)
-            except ValueError:
-                age = 20
+            age = row_data.get('Возраст', 20)
 
             price_quality = calculate_price_quality(ovr, transfer_value, salary_value, age)
             row_data['Цена / Качество'] = price_quality
 
+            # 7. Рассчитываем роли вратарей (если игрок вратарь)
+            positions = row_data.get('Позиции', '')
+            if 'В' in str(positions):  # Если игрок вратарь
+                from src.roles import Goalkeeper
+
+                # Передаём полный словарь cols и col_indices для доступа к атрибутам
+                row_data['Вратарь (Зщ)'] = Goalkeeper.defender(row_data)
+                row_data['Вратарь-чистильщик (Зщ)'] = Goalkeeper.sweeper_keeper_defend(row_data)
+                row_data['Вратарь-чистильщик (По)'] = Goalkeeper.sweeper_keeper_support(row_data)
+                row_data['Вратарь-чистильщик (Ат)'] = Goalkeeper.sweeper_keeper_attack(row_data)
+
+                # Базовый "Вратарь" - пока заглушка (будет средним позже)
+                row_data['Вратарь'] = row_data['Вратарь (Зщ)']
+            else:
+                # Для полевых игроков ставим 0
+                row_data['Вратарь'] = 0.0
+                row_data['Вратарь (Зщ)'] = 0.0
+                row_data['Вратарь-чистильщик (Зщ)'] = 0.0
+                row_data['Вратарь-чистильщик (По)'] = 0.0
+                row_data['Вратарь-чистильщик (Ат)'] = 0.0
+
             data.append(row_data)
+        else:
+            skipped += 1
 
-            if idx % 1000 == 0:
-                print(f"   ⏳ Обработано: {idx} строк")
+        if idx % 1000 == 0:
+            print(f"   ⏳ Обработано: {idx} строк (пропущено: {skipped})")
 
-    print(f"✅ Парсинг завершен. Обработано строк: {len(data)}")
+    print(f"\n✅ Парсинг завершен. Обработано строк: {len(data)}, пропущено: {skipped}")
 
     return pd.DataFrame(data, columns=models.ALL_COLUMNS)
