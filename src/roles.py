@@ -91,9 +91,56 @@ class CenterBack:
         roles = [CenterBack.ball_playing_defend(player_data), CenterBack.ball_playing_stop(player_data), CenterBack.ball_playing_cover(player_data)]
         return round(sum(roles) / len(roles), 2)
 
-    # Заглушки для будущих ролей
     @staticmethod
-    def libero_overall(player_data: dict) -> float: return 0.0
+    def libero_support(player_data: dict) -> float:
+        """Либеро (По) - поддерживающая обязанность"""
+        technical_weights = {
+            'Опк': 1.0, 'Отб': 1.0, 'Пас': 1.0, 'ПКас': 1.0,
+            'Дрб': 0.75, 'Глв': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'Поз': 1.0, 'Инт': 1.0, 'Ком': 1.0,
+            'Кнц': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Имп': 0.75, 'Хрб': 0.75,
+        }
+        physical_weights = {
+            'Скр': 1.0,
+            'ВЫН': 0.75, 'ПРГ': 0.75, 'КРД': 0.75, 'Лвк': 0.75, 'СИЛ': 0.75,
+        }
+        return CenterBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def libero_attack(player_data: dict) -> float:
+        """Либеро (Ат) - атакующая обязанность"""
+        technical_weights = {
+            'Дрб': 1.0, 'Опк': 1.0, 'Отб': 1.0, 'Пас': 1.0, 'ПКас': 1.0,
+            'Длн': 0.75, 'Глв': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'Поз': 1.0, 'Имп': 1.0, 'Инт': 1.0,
+            'Ком': 1.0, 'Кнц': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Хрб': 0.75,
+        }
+        physical_weights = {
+            'Скр': 1.0,
+            'ВЫН': 0.75, 'ПРГ': 0.75, 'КРД': 0.75,
+            'Лвк': 0.75, 'СИЛ': 0.75, 'Уск': 0.75,
+        }
+        return CenterBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def libero_overall(player_data: dict) -> float:
+        """Либеро (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            CenterBack.libero_support(player_data),
+            CenterBack.libero_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
+
     @staticmethod
     def wide_center_back_overall(player_data: dict) -> float: return 0.0
     @staticmethod
