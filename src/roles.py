@@ -274,7 +274,69 @@ class CenterBack:
         return round(sum(roles) / len(roles), 2)
 
     @staticmethod
-    def no_nonsense_overall(player_data: dict) -> float: return 0.0
+    def no_nonsense_defend(player_data: dict) -> float:
+        """Чистый центральный защитник (Зщ)"""
+        technical_weights = {
+            'Глв': 1.0, 'Опк': 1.0, 'Отб': 1.0,
+        }
+        mental_weights = {
+            'Поз': 1.0,
+            'Агр': 0.75, 'Инт': 0.75, 'Кнц': 0.75, 'Хрб': 0.75,
+        }
+        physical_weights = {
+            'ПРГ': 1.0, 'СИЛ': 1.0,
+            'Скр': 0.75,
+        }
+        return CenterBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def no_nonsense_stop(player_data: dict) -> float:
+        """Чистый центральный защитник (Бл)"""
+        technical_weights = {
+            'Глв': 1.0, 'Отб': 1.0,
+            'Опк': 0.75,
+        }
+        mental_weights = {
+            'Агр': 1.0, 'Поз': 1.0, 'Хрб': 1.0,
+            'Инт': 0.75, 'Кнц': 0.75,
+        }
+        physical_weights = {
+            'ПРГ': 1.0, 'СИЛ': 1.0,
+        }
+        return CenterBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def no_nonsense_cover(player_data: dict) -> float:
+        """Чистый центральный защитник (Пс)"""
+        technical_weights = {
+            'Опк': 1.0, 'Отб': 1.0,
+            'Глв': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Инт': 1.0, 'Кнц': 1.0,
+            'Хрб': 0.75,
+        }
+        physical_weights = {
+            'Скр': 1.0,
+            'ПРГ': 0.75, 'СИЛ': 0.75,
+        }
+        return CenterBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def no_nonsense_overall(player_data: dict) -> float:
+        """Чистый центральный защитник (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            CenterBack.no_nonsense_defend(player_data),
+            CenterBack.no_nonsense_stop(player_data),
+            CenterBack.no_nonsense_cover(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def overall(player_data: dict) -> float:
