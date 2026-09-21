@@ -10,25 +10,13 @@ from src import config, models
 
 
 def ensure_directory(directory: str) -> None:
-    """Создает директорию, если она не существует."""
     os.makedirs(directory, exist_ok=True)
 
 
-def format_sheet(ws, columns: list) -> None:
-    """
-    Форматирует лист Excel:
-    - Закрепление столбцов A-K
-    - Автофильтр
-    - Стилизация заголовков
-    - Фиксированная ширина столбцов
-    """
-    # Закрепление столбцов A-K включительно
-    ws.freeze_panes = 'L2'
-
-    # Автофильтр
+def format_sheet(ws, columns: list, freeze_col: str = 'L2') -> None:
+    ws.freeze_panes = freeze_col
     ws.auto_filter.ref = ws.dimensions
 
-    # Стилизация заголовков
     header_fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
     header_font = Font(bold=True, color='FFFFFF', size=11)
     header_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
@@ -37,57 +25,27 @@ def format_sheet(ws, columns: list) -> None:
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = header_alignment
-
     ws.row_dimensions[1].height = 30
 
-    # Ширина столбцов
-    column_widths = {
-        'A': 12,  # Позиции
-        'B': 8,   # Возраст
-        'C': 25,  # Имя
-        'D': 18,  # Зарплата (€)
-        'E': 20,  # Сумма трансфера (€)
-        'F': 20,  # Характер
-        'G': 12,  # Цена / Качество
-        'H': 12,  # Технические
-    }
-
-    # Списки колонок для форматирования
+    column_widths = {'A': 12, 'B': 8, 'C': 25, 'D': 18, 'E': 20, 'F': 20, 'G': 12, 'H': 12}
     money_cols = ['Зарплата (€)', 'Сумма трансфера (€)']
     rating_cols = [
         'Цена / Качество', 'Технические', 'Психологические', 'Физические', 'ОВР',
-        'Вратарь', 'Вратарь (Зщ)', 'Вратарь-чистильщик (Зщ)',
-        'Вратарь-чистильщик (По)', 'Вратарь-чистильщик (Ат)',
-        'ЦЗ (ОВР)',
-        'Созидательный защитник (ОВР)', 'Созидательный защитник (Зщ)',
-        'Созидательный защитник (Бл)', 'Созидательный защитник (Пс)',
-        'Либеро (ОВР)', 'Либеро (По)', 'Либеро (Ат)',
-        'Крайний центральный защитник (ОВР)', 'Крайний центральный защитник (Зщ)',
-        'Крайний центральный защитник (По)', 'Крайний центральный защитник (Ат)',
-        'Центральный защитник (ОВР)', 'Центральный защитник (Зщ)',
-        'Центральный защитник (Бл)', 'Центральный защитник (Пс)',
-        'Чистый центральный защитник (ОВР)', 'Чистый центральный защитник (Зщ)',
-        'Чистый центральный защитник (Бл)', 'Чистый центральный защитник (Пс)',
+        'Универсальность', 'Вратарь (Зщ)', 'Вратарь-чистильщик (Зщ)', 'Вратарь-чистильщик (По)', 'Вратарь-чистильщик (Ат)',
+        'Созидательный защитник', 'Либеро', 'Крайний центральный защитник',
+        'Центральный защитник', 'Чистый центральный защитник'
     ]
-
-    center_alignment = Alignment(horizontal='center', vertical='center')
 
     for col_idx in range(1, len(columns) + 1):
         col_letter = get_column_letter(col_idx)
         col_name = columns[col_idx - 1]
 
-        # Устанавливаем ширину
-        if col_letter in column_widths:
-            ws.column_dimensions[col_letter].width = column_widths[col_letter]
-        else:
-            ws.column_dimensions[col_letter].width = 8
+        ws.column_dimensions[col_letter].width = column_widths.get(col_letter, 8)
 
-        # Центрирование столбца B (Возраст)
         if col_letter == 'B':
             for row in range(2, ws.max_row + 1):
-                ws[f'{col_letter}{row}'].alignment = center_alignment
+                ws[f'{col_letter}{row}'].alignment = Alignment(horizontal='center', vertical='center')
 
-        # Форматирование числовых столбцов
         if col_name in money_cols:
             for row in range(2, ws.max_row + 1):
                 cell = ws[f'{col_letter}{row}']
@@ -102,38 +60,35 @@ def format_sheet(ws, columns: list) -> None:
 
 
 def save_to_excel_formatted(df: pd.DataFrame, output_path: str) -> None:
-    """
-    Сохраняет DataFrame в Excel файл с несколькими листами:
-    - Основное (все игроки)
-    - Вратарь (только вратари)
-    - Центральный защитник (только центральные защитники)
-    """
     print(f"🎨 Применяется форматирование Excel...")
-
     with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
-        # Лист "Основное" - все игроки
+        # Лист "Основное" (все игроки, базовые колонки)
         df_main = df[models.MAIN_COLUMNS].copy()
         df_main.to_excel(writer, sheet_name='Основное', index=False)
-        format_sheet(writer.sheets['Основное'], models.MAIN_COLUMNS)
+        format_sheet(writer.sheets['Основное'], models.MAIN_COLUMNS, freeze_col='L2')
 
-        # Лист "Вратарь" - только вратари
+        # Лист "Вратарь" (только вратари)
         df_gk = df[df['Позиции'].str.contains('В', na=False)][models.GOALKEEPER_COLUMNS].copy()
         df_gk.to_excel(writer, sheet_name='Вратарь', index=False)
-        format_sheet(writer.sheets['Вратарь'], models.GOALKEEPER_COLUMNS)
+        format_sheet(writer.sheets['Вратарь'], models.GOALKEEPER_COLUMNS, freeze_col='M2') # Закрепление A-L
 
-        # Лист "Центральный защитник" - только центральные защитники
-        df_cb = df[df['Позиции'].str.contains('ЦЗ|Ц', na=False)][models.CENTER_BACK_COLUMNS].copy()
+        # Лист "Центральный защитник" (только ЦЗ)
+        mask_cb = (
+                df['Позиции'].str.contains('З (Ц)', na=False, regex=False) |
+                df['Позиции'].str.contains('З (ЛЦ)', na=False, regex=False) |
+                df['Позиции'].str.contains('З (ПЦ)', na=False, regex=False) |
+                df['Позиции'].str.contains('ЦЗ', na=False, regex=False)
+        )
+        df_cb = df[mask_cb][models.CENTER_BACK_COLUMNS].copy()
         df_cb.to_excel(writer, sheet_name='Центральный защитник', index=False)
-        format_sheet(writer.sheets['Центральный защитник'], models.CENTER_BACK_COLUMNS)
+        format_sheet(writer.sheets['Центральный защитник'], models.CENTER_BACK_COLUMNS, freeze_col='M2') # Закрепление A-L
 
     print(f"💾 Excel с форматированием сохранен: {output_path}")
 
 
 def save_results(df: pd.DataFrame, base_name: str = None) -> None:
-    """Сохраняет результаты только в Excel формате."""
     if base_name is None:
         base_name = config.DEFAULT_OUTPUT_NAME
-
     ensure_directory(config.OUTPUT_DIR)
 
     xlsx_path = os.path.join(config.OUTPUT_DIR, f'{base_name}.xlsx')
