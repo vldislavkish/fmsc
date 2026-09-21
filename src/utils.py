@@ -60,19 +60,33 @@ def format_sheet(ws, columns: list, freeze_col: str = 'L2') -> None:
 
 
 def save_to_excel_formatted(df: pd.DataFrame, output_path: str) -> None:
+    """
+    Сохраняет DataFrame в Excel файл с несколькими листами:
+    - Основное (все игроки)
+    - Вратарь (только вратари)
+    - Центральный защитник (только центральные защитники)
+    """
     print(f"🎨 Применяется форматирование Excel...")
+
     with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
-        # Лист "Основное" (все игроки, базовые колонки)
+        # === Лист "Основное" ===
         df_main = df[models.MAIN_COLUMNS].copy()
         df_main.to_excel(writer, sheet_name='Основное', index=False)
         format_sheet(writer.sheets['Основное'], models.MAIN_COLUMNS, freeze_col='L2')
 
-        # Лист "Вратарь" (только вратари)
+        # === Лист "Вратарь" ===
         df_gk = df[df['Позиции'].str.contains('В', na=False)][models.GOALKEEPER_COLUMNS].copy()
         df_gk.to_excel(writer, sheet_name='Вратарь', index=False)
-        format_sheet(writer.sheets['Вратарь'], models.GOALKEEPER_COLUMNS, freeze_col='M2') # Закрепление A-L
+        ws_gk = writer.sheets['Вратарь']
+        format_sheet(ws_gk, models.GOALKEEPER_COLUMNS, freeze_col='M2')
 
-        # Лист "Центральный защитник" (только ЦЗ)
+        # ✅ Добавляем формулу "Универсальность" = среднее 4 ролей (колонки M-P)
+        # Структура: L=Универсальность, M=Вратарь (Зщ), N=Вратарь-чистильщик (Зщ),
+        #            O=Вратарь-чистильщик (По), P=Вратарь-чистильщик (Ат)
+        for row in range(2, ws_gk.max_row + 1):
+            ws_gk.cell(row=row, column=12).value = f'=AVERAGE(M{row}:P{row})'
+
+        # === Лист "Центральный защитник" ===
         mask_cb = (
                 df['Позиции'].str.contains('З (Ц)', na=False, regex=False) |
                 df['Позиции'].str.contains('З (ЛЦ)', na=False, regex=False) |
@@ -81,7 +95,14 @@ def save_to_excel_formatted(df: pd.DataFrame, output_path: str) -> None:
         )
         df_cb = df[mask_cb][models.CENTER_BACK_COLUMNS].copy()
         df_cb.to_excel(writer, sheet_name='Центральный защитник', index=False)
-        format_sheet(writer.sheets['Центральный защитник'], models.CENTER_BACK_COLUMNS, freeze_col='M2') # Закрепление A-L
+        ws_cb = writer.sheets['Центральный защитник']
+        format_sheet(ws_cb, models.CENTER_BACK_COLUMNS, freeze_col='M2')
+
+        # ✅ Добавляем формулу "Универсальность" = среднее 5 ролей (колонки M-Q)
+        # Структура: L=Универсальность, M=Созидательный, N=Либеро,
+        #            O=Крайний ЦЗ, P=Центральный защитник, Q=Чистый ЦЗ
+        for row in range(2, ws_cb.max_row + 1):
+            ws_cb.cell(row=row, column=12).value = f'=AVERAGE(M{row}:Q{row})'
 
     print(f"💾 Excel с форматированием сохранен: {output_path}")
 
