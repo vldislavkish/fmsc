@@ -550,15 +550,98 @@ class FullBack:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Полуфланговый крайний защитник ===
+
+    @staticmethod
+    def half_wing_back_defend(player_data: dict) -> float:
+        """Полуфланговый крайний защитник (Зщ)"""
+        technical_weights = {
+            'Опк': 1.0, 'Отб': 1.0, 'Пас': 1.0,
+            'Дрб': 0.75, 'ПКас': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Инт': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Раб': 1.0,
+            'Ибм': 0.75, 'Кнц': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 0.75, 'Лвк': 0.75, 'Уск': 0.75,
+        }
+        return FullBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def half_wing_back_support(player_data: dict) -> float:
+        """Полуфланговый крайний защитник (По)"""
+        technical_weights = {
+            'Опк': 1.0, 'Отб': 1.0, 'Пас': 1.0,
+            'Дрб': 0.75, 'ПКас': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Раб': 1.0,
+            'Поз': 0.75, 'Инт': 0.75, 'Кнц': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0,
+            'Лвк': 0.75, 'Уск': 0.75,
+        }
+        return FullBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def half_wing_back_attack(player_data: dict) -> float:
+        """Полуфланговый крайний защитник (Ат)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Опк': 1.0, 'Отб': 1.0, 'Пас': 1.0, 'Тех': 1.0,
+            'Длн': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Раб': 1.0,
+            'Поз': 0.75, 'Имп': 0.75, 'Инт': 0.75, 'Кнц': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0, 'Уск': 1.0,
+            'Лвк': 0.75, 'Скр': 0.75,
+        }
+        return FullBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def half_wing_back_overall(player_data: dict) -> float:
-        """Полуфланговый крайний защитник (ОВР) — заглушка"""
-        return 0.0
+        """Полуфланговый крайний защитник (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            FullBack.half_wing_back_defend(player_data),
+            FullBack.half_wing_back_support(player_data),
+            FullBack.half_wing_back_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
+
+    # === Чистый крайний защитник ===
+
+    @staticmethod
+    def no_nonsense_full_back_defend(player_data: dict) -> float:
+        """Чистый крайний защитник (Зщ)"""
+        technical_weights = {
+            'Опк': 1.0, 'Отб': 1.0,
+            'Глв': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Инт': 1.0,
+            'Агр': 0.75, 'Ком': 0.75, 'Кнц': 0.75, 'Хрб': 0.75,
+        }
+        physical_weights = {
+            'СИЛ': 1.0,
+        }
+        return FullBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
 
     @staticmethod
     def no_nonsense_full_back_overall(player_data: dict) -> float:
-        """Чистый крайний защитник (ОВР) — заглушка"""
-        return 0.0
+        """Чистый крайний защитник (ОВР) — пока только одна роль"""
+        return FullBack.no_nonsense_full_back_defend(player_data)
 
     @staticmethod
     def overall(player_data: dict) -> float:
