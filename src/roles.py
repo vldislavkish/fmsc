@@ -654,3 +654,78 @@ class FullBack:
             FullBack.no_nonsense_full_back_overall(player_data),
         ]
         return round(sum(roles) / len(roles), 2)
+
+
+class DefensiveMidfielder:
+    """Класс для расчёта ролей опорного полузащитника."""
+
+    @staticmethod
+    def _calculate_role(player_data: dict,
+                        technical_weights: dict,
+                        mental_weights: dict,
+                        physical_weights: dict) -> float:
+        """Универсальный метод расчёта роли."""
+        weighted_sum = sum(player_data.get(attr, 0) * weight
+                           for attr, weight in {**technical_weights, **mental_weights, **physical_weights}.items())
+        max_possible = sum(20 * weight
+                           for weight in {**technical_weights, **mental_weights, **physical_weights}.values())
+        return round((weighted_sum / max_possible) * 100, 2) if max_possible > 0 else 0.0
+
+
+    @staticmethod
+    def defensive_midfielder_overall(player_data: dict) -> float:
+        """Опорный полузащитник (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def deep_lying_playmaker_overall(player_data: dict) -> float:
+        """Оттянутый плеймейкер (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def ball_winning_midfielder_overall(player_data: dict) -> float:
+        """Полузащитник-разрушитель (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def anchor_man_overall(player_data: dict) -> float:
+        """Чистый опорный полузащитник (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def half_back_overall(player_data: dict) -> float:
+        """Хавбек (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def regista_overall(player_data: dict) -> float:
+        """Реджиста (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def roamer_overall(player_data: dict) -> float:
+        """Блуждающий плеймейкер (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def segundo_volante_overall(player_data: dict) -> float:
+        """Сегундо-воланте (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def overall(player_data: dict) -> float:
+        """Универсальность ОП — среднее всех 8 ролей"""
+        roles = [
+            DefensiveMidfielder.defensive_midfielder_overall(player_data),
+            DefensiveMidfielder.deep_lying_playmaker_overall(player_data),
+            DefensiveMidfielder.ball_winning_midfielder_overall(player_data),
+            DefensiveMidfielder.anchor_man_overall(player_data),
+            DefensiveMidfielder.half_back_overall(player_data),
+            DefensiveMidfielder.regista_overall(player_data),
+            DefensiveMidfielder.roamer_overall(player_data),
+            DefensiveMidfielder.segundo_volante_overall(player_data),
+        ]
+        active_roles = [r for r in roles if r > 0]
+        if not active_roles:
+            return 0.0
+        return round(sum(active_roles) / len(active_roles), 2)

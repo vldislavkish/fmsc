@@ -234,5 +234,21 @@ def parse_squad(html_path: str) -> pd.DataFrame:
         if idx % 1000 == 0:
             print(f"   ⏳ Обработано: {idx} строк")
 
+        # Роли опорного полузащитника
+        dm_prefixes = ["З", "КЗ", "ОП", "П"]
+        is_defensive_midfielder = has_position_prefix(positions_val, dm_prefixes)
+        from src.roles import DefensiveMidfielder
+
+        if is_defensive_midfielder:
+            row_data['Универсальность'] = DefensiveMidfielder.overall(row_data)
+            row_data['Опорный полузащитник'] = DefensiveMidfielder.defensive_midfielder_overall(row_data)
+            row_data['Оттянутый плеймейкер'] = DefensiveMidfielder.deep_lying_playmaker_overall(row_data)
+            row_data['Полузащитник-разрушитель'] = DefensiveMidfielder.ball_winning_midfielder_overall(row_data)
+            row_data['Чистый опорный полузащитник'] = DefensiveMidfielder.anchor_man_overall(row_data)
+            row_data['Хавбек'] = DefensiveMidfielder.half_back_overall(row_data)
+            row_data['Реджиста'] = DefensiveMidfielder.regista_overall(row_data)
+            row_data['Блуждающий плеймейкер'] = DefensiveMidfielder.roamer_overall(row_data)
+            row_data['Сегундо-воланте'] = DefensiveMidfielder.segundo_volante_overall(row_data)
+
     print(f"✅ Парсинг завершен. Обработано строк: {len(data)}")
     return pd.DataFrame(data, columns=models.ALL_COLUMNS)
