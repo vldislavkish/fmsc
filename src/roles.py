@@ -349,3 +349,117 @@ class CenterBack:
             CenterBack.no_nonsense_overall(player_data),
         ]
         return round(sum(roles) / len(roles), 2)
+
+
+class FullBack:
+    """Класс для расчёта ролей крайнего защитника."""
+
+    @staticmethod
+    def _calculate_role(player_data: dict,
+                        technical_weights: dict,
+                        mental_weights: dict,
+                        physical_weights: dict) -> float:
+        """Универсальный метод расчёта роли."""
+        weighted_sum = sum(player_data.get(attr, 0) * weight
+                           for attr, weight in {**technical_weights, **mental_weights, **physical_weights}.items())
+        max_possible = sum(20 * weight
+                           for weight in {**technical_weights, **mental_weights, **physical_weights}.values())
+        return round((weighted_sum / max_possible) * 100, 2) if max_possible > 0 else 0.0
+
+    # === Фланговый защитник ===
+    @staticmethod
+    def wing_back_defend(player_data: dict) -> float:
+        """Фланговый защитник (Зщ)"""
+        technical_weights = {
+            'Опк': 1.0, 'Отб': 1.0,
+            'Нав': 0.75, 'Пас': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Инт': 1.0, 'Кнц': 1.0,
+            'Ком': 0.75, 'ПРш': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 0.75, 'Скр': 0.75,
+        }
+        return FullBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def wing_back_support(player_data: dict) -> float:
+        """Фланговый защитник (По)"""
+        technical_weights = {
+            'Опк': 1.0, 'Отб': 1.0,
+            'Нав': 0.75, 'Дрб': 0.75, 'Пас': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Инт': 1.0, 'Ком': 1.0, 'Кнц': 1.0, 'Раб': 1.0,
+            'ПРш': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 0.75, 'Скр': 0.75,
+        }
+        return FullBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def wing_back_attack(player_data: dict) -> float:
+        """Фланговый защитник (Ат)"""
+        technical_weights = {
+            'Нав': 1.0, 'Отб': 1.0,
+            'Дрб': 0.75, 'Опк': 0.75, 'Пас': 0.75, 'ПКас': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Инт': 1.0, 'Ком': 1.0, 'Раб': 1.0,
+            'Ибм': 0.75, 'Кнц': 0.75, 'ПРш': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0, 'Скр': 1.0,
+            'Лвк': 0.75, 'Уск': 0.75,
+        }
+        return FullBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def wing_back_overall(player_data: dict) -> float:
+        """Фланговый защитник (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            FullBack.wing_back_defend(player_data),
+            FullBack.wing_back_support(player_data),
+            FullBack.wing_back_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
+
+    @staticmethod
+    def full_back_overall(player_data: dict) -> float:
+        """Крайний защитник (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def attacking_wing_back_overall(player_data: dict) -> float:
+        """Атакующий крайний защитник (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def half_wing_back_overall(player_data: dict) -> float:
+        """Полуфланговый крайний защитник (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def no_nonsense_full_back_overall(player_data: dict) -> float:
+        """Чистый крайний защитник (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def overall(player_data: dict) -> float:
+        """Универсальность КЗ — среднее всех 5 ролей"""
+        roles = [
+            FullBack.wing_back_overall(player_data),
+            FullBack.full_back_overall(player_data),
+            FullBack.attacking_wing_back_overall(player_data),
+            FullBack.half_wing_back_overall(player_data),
+            FullBack.no_nonsense_full_back_overall(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)

@@ -18,6 +18,23 @@ def get_latest_html(directory: str = None) -> str:
     return max(list_of_files, key=os.path.getmtime)
 
 
+def has_position_prefix(positions_str, prefixes: list) -> bool:
+    """
+    Проверяет, есть ли в строке позиций хотя бы одна позиция,
+    начинающаяся с одного из указанных префиксов.
+    """
+    if not positions_str or str(positions_str).strip() == '':
+        return False
+
+    # Генератор для разбивки по запятым
+    elements = (item.strip() for item in str(positions_str).split(','))
+
+    # Проверяем каждую позицию на совпадение с префиксами
+    return any(
+        any(pos.startswith(prefix) for prefix in prefixes)
+        for pos in elements
+    )
+
 def parse_money_value(value_str: str) -> float:
     if not value_str or value_str.strip() == '-' or 'Не продаётся' in value_str or 'Не продается' in value_str:
         return None
@@ -188,8 +205,9 @@ def parse_squad(html_path: str) -> pd.DataFrame:
                 row_data[col] = 0.0
 
         # Роли центральных защитников
-        is_cb = ('З (Ц)' in str(positions_val) or 'З (ЛЦ)' in str(positions_val) or 'З (ПЦ)' in str(positions_val) or 'ЦЗ' in str(positions_val))
-        if is_cb:
+        cb_prefixes = ["З", "КЗ", "ОП"]
+        is_center_back = has_position_prefix(positions_val, cb_prefixes)
+        if is_center_back:
             from src.roles import CenterBack
             row_data['Универсальность'] = CenterBack.overall(row_data)
             row_data['Созидательный защитник'] = CenterBack.ball_playing_overall(row_data)
@@ -200,6 +218,17 @@ def parse_squad(html_path: str) -> pd.DataFrame:
         else:
             for col in ['Универсальность', 'Созидательный защитник', 'Либеро', 'Крайний центральный защитник', 'Центральный защитник', 'Чистый центральный защитник']:
                 row_data[col] = 0.0
+
+        # Роли крайнего защитника
+        fb_prefixes = ["З", "КЗ", "ОП", "П"]
+        is_fullback = has_position_prefix(positions_val, fb_prefixes)
+        from src.roles import FullBack
+        if is_fullback:
+            row_data['Фланговый защитник'] = FullBack.wing_back_overall(row_data)
+            row_data['Крайний защитник'] = FullBack.full_back_overall(row_data)
+            row_data['Атакующий крайний защитник'] = FullBack.attacking_wing_back_overall(row_data)
+            row_data['Полуфланговый крайний защитник'] = FullBack.half_wing_back_overall(row_data)
+            row_data['Чистый крайний защитник'] = FullBack.no_nonsense_full_back_overall(row_data)
 
         data.append(row_data)
         if idx % 1000 == 0:

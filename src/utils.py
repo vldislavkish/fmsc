@@ -80,29 +80,35 @@ def save_to_excel_formatted(df: pd.DataFrame, output_path: str) -> None:
         ws_gk = writer.sheets['Вратарь']
         format_sheet(ws_gk, models.GOALKEEPER_COLUMNS, freeze_col='M2')
 
-        # ✅ Добавляем формулу "Универсальность" = среднее 4 ролей (колонки M-P)
-        # Структура: L=Универсальность, M=Вратарь (Зщ), N=Вратарь-чистильщик (Зщ),
-        #            O=Вратарь-чистильщик (По), P=Вратарь-чистильщик (Ат)
         for row in range(2, ws_gk.max_row + 1):
             ws_gk.cell(row=row, column=12).value = f'=AVERAGE(M{row}:P{row})'
 
         # === Лист "Центральный защитник" ===
-        mask_cb = (
-                df['Позиции'].str.contains('З (Ц)', na=False, regex=False) |
-                df['Позиции'].str.contains('З (ЛЦ)', na=False, regex=False) |
-                df['Позиции'].str.contains('З (ПЦ)', na=False, regex=False) |
-                df['Позиции'].str.contains('ЦЗ', na=False, regex=False)
-        )
+        # Позиции: "З", "КЗ", "ОП"
+        from src.parser import has_position_prefix
+        cb_prefixes = ["З", "КЗ", "ОП"]
+        mask_cb = df['Позиции'].apply(lambda x: has_position_prefix(x, cb_prefixes))
         df_cb = df[mask_cb][models.CENTER_BACK_COLUMNS].copy()
         df_cb.to_excel(writer, sheet_name='Центральный защитник', index=False)
         ws_cb = writer.sheets['Центральный защитник']
         format_sheet(ws_cb, models.CENTER_BACK_COLUMNS, freeze_col='M2')
 
-        # ✅ Добавляем формулу "Универсальность" = среднее 5 ролей (колонки M-Q)
-        # Структура: L=Универсальность, M=Созидательный, N=Либеро,
-        #            O=Крайний ЦЗ, P=Центральный защитник, Q=Чистый ЦЗ
+        # Формула "Универсальность" = среднее 5 ролей (колонки M-Q)
         for row in range(2, ws_cb.max_row + 1):
             ws_cb.cell(row=row, column=12).value = f'=AVERAGE(M{row}:Q{row})'
+
+        # === Лист "Крайний защитник" ===
+        # Позиции: "З", "КЗ", "ОП", "П"
+        fb_prefixes = ["З", "КЗ", "ОП", "П"]
+        mask_fb = df['Позиции'].apply(lambda x: has_position_prefix(x, fb_prefixes))
+        df_fb = df[mask_fb][models.FULLBACK_COLUMNS].copy()
+        df_fb.to_excel(writer, sheet_name='Крайний защитник', index=False)
+        ws_fb = writer.sheets['Крайний защитник']
+        format_sheet(ws_fb, models.FULLBACK_COLUMNS, freeze_col='M2')
+
+        # Формула "Универсальность" = среднее 5 ролей (колонки M-Q)
+        for row in range(2, ws_fb.max_row + 1):
+            ws_fb.cell(row=row, column=12).value = f'=AVERAGE(M{row}:Q{row})'
 
     print(f"💾 Excel с форматированием сохранен: {output_path}")
 
