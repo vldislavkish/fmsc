@@ -142,7 +142,70 @@ class CenterBack:
         return round(sum(roles) / len(roles), 2)
 
     @staticmethod
-    def wide_center_back_overall(player_data: dict) -> float: return 0.0
+    def wide_center_back_defend(player_data: dict) -> float:
+        """Крайний центральный защитник (Зщ)"""
+        technical_weights = {
+            'Глв': 1.0, 'Опк': 1.0, 'Отб': 1.0, 'Нав': 1.0,
+            'Дрб': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0,
+            'Раб': 0.75, 'Смб': 0.75, 'Хрб': 0.75,
+            'Инт': 0.75, 'Кнц': 0.75, 'ПРш': 0.75, 'Агр': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0, 'ПРГ': 1.0, 'СИЛ': 1.0,
+            'Скр': 0.75,
+        }
+        return CenterBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def wide_center_back_support(player_data: dict) -> float:
+        """Крайний центральный защитник (По)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Глв': 1.0, 'Нав': 1.0, 'Опк': 1.0, 'Отб': 1.0,
+        }
+        mental_weights = {
+            'Поз': 1.0,
+            'Агр': 0.75, 'Ибм': 0.75, 'Инт': 0.75, 'Кнц': 0.75,
+            'ПРш': 0.75, 'Раб': 0.75, 'Смб': 0.75, 'Хрб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0, 'ПРГ': 1.0, 'СИЛ': 1.0, 'Скр': 1.0,
+        }
+        return CenterBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def wide_center_back_attack(player_data: dict) -> float:
+        """Крайний центральный защитник (Ат)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Глв': 1.0, 'Нав': 1.0, 'Опк': 1.0, 'Отб': 1.0,
+        }
+        mental_weights = {
+            'Ибм': 1.0,
+            'Агр': 0.75, 'Поз': 0.75, 'Инт': 0.75, 'Кнц': 0.75,
+            'ПРш': 0.75, 'Раб': 0.75, 'Смб': 0.75, 'Хрб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0, 'ПРГ': 1.0, 'СИЛ': 1.0, 'Скр': 1.0,
+        }
+        return CenterBack._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def wide_center_back_overall(player_data: dict) -> float:
+        """Крайний центральный защитник (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            CenterBack.wide_center_back_defend(player_data),
+            CenterBack.wide_center_back_support(player_data),
+            CenterBack.wide_center_back_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
     @staticmethod
     def central_defender_overall(player_data: dict) -> float: return 0.0
     @staticmethod
