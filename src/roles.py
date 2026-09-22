@@ -1874,10 +1874,51 @@ class Striker:
         """Треквартиста — делегируем к AttackingMidfielder"""
         return AttackingMidfielder.trequartista_overall(player_data)
 
+    # === Оттянутый форвард ===
+    @staticmethod
+    def deep_lying_forward_support(player_data: dict) -> float:
+        """Оттянутый форвард (По)"""
+        technical_weights = {
+            'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Зав': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Вид': 0.75, 'Имп': 0.75, 'Инт': 0.75,
+        }
+        physical_weights = {
+            'КРД': 0.75, 'СИЛ': 0.75,
+        }
+        return Striker._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def deep_lying_forward_attack(player_data: dict) -> float:
+        """Оттянутый форвард (Ат)"""
+        technical_weights = {
+            'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Дрб': 0.75, 'Зав': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Вид': 0.75, 'Имп': 0.75, 'Инт': 0.75,
+        }
+        physical_weights = {
+            'КРД': 0.75, 'СИЛ': 0.75,
+        }
+        return Striker._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def deep_lying_forward_overall(player_data: dict) -> float:
-        """Оттянутый форвард (ОВР) — заглушка"""
-        return 0.0
+        """Оттянутый форвард (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            Striker.deep_lying_forward_support(player_data),
+            Striker.deep_lying_forward_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def advanced_forward_overall(player_data: dict) -> float:
