@@ -1615,10 +1615,29 @@ class AttackingMidfielder:
         """Треквартиста (ОВР) — у роли только одна обязанность (Ат)"""
         return AttackingMidfielder.trequartista_attack(player_data)
 
+    # === Энганче ===
+    @staticmethod
+    def enganche_support(player_data: dict) -> float:
+        """Энганче (По)"""
+        technical_weights = {
+            'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Дрб': 0.75,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Ибм': 0.75, 'Имп': 0.75, 'Инт': 0.75, 'Ком': 0.75,
+        }
+        physical_weights = {
+            'Лвк': 0.75,
+        }
+        return AttackingMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def enganche_overall(player_data: dict) -> float:
-        """Энганче (ОВР) — заглушка"""
-        return 0.0
+        """Энганче (ОВР) — у роли только одна обязанность (По)"""
+        return AttackingMidfielder.enganche_support(player_data)
 
     @staticmethod
     def shadow_striker_overall(player_data: dict) -> float:
