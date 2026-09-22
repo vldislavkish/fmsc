@@ -1852,3 +1852,77 @@ class AttackingWideMidfielder:
         if not active_roles:
             return 0.0
         return round(sum(active_roles) / len(active_roles), 2)
+
+
+class Striker:
+    """Класс для расчёта ролей нападающего."""
+
+    @staticmethod
+    def _calculate_role(player_data: dict,
+                        technical_weights: dict,
+                        mental_weights: dict,
+                        physical_weights: dict) -> float:
+        """Универсальный метод расчёта роли."""
+        weighted_sum = sum(player_data.get(attr, 0) * weight
+                           for attr, weight in {**technical_weights, **mental_weights, **physical_weights}.items())
+        max_possible = sum(20 * weight
+                           for weight in {**technical_weights, **mental_weights, **physical_weights}.values())
+        return round((weighted_sum / max_possible) * 100, 2) if max_possible > 0 else 0.0
+
+    @staticmethod
+    def trequartista_overall(player_data: dict) -> float:
+        """Треквартиста — делегируем к AttackingMidfielder"""
+        return AttackingMidfielder.trequartista_overall(player_data)
+
+    @staticmethod
+    def deep_lying_forward_overall(player_data: dict) -> float:
+        """Оттянутый форвард (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def advanced_forward_overall(player_data: dict) -> float:
+        """Выдвинутый форвард (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def target_man_overall(player_data: dict) -> float:
+        """Таргетмен (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def poacher_overall(player_data: dict) -> float:
+        """Чистый форвард (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def complete_forward_overall(player_data: dict) -> float:
+        """Универсальный форвард (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def pressing_forward_overall(player_data: dict) -> float:
+        """Прессингующий форвард (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def false_nine_overall(player_data: dict) -> float:
+        """Ложная девятка (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def overall(player_data: dict) -> float:
+        """Универсальность нападающего — среднее всех 8 ролей"""
+        roles = [
+            Striker.deep_lying_forward_overall(player_data),
+            Striker.advanced_forward_overall(player_data),
+            Striker.target_man_overall(player_data),
+            Striker.poacher_overall(player_data),
+            Striker.complete_forward_overall(player_data),
+            Striker.pressing_forward_overall(player_data),
+            Striker.trequartista_overall(player_data),
+            Striker.false_nine_overall(player_data),
+        ]
+        active_roles = [r for r in roles if r > 0]
+        if not active_roles:
+            return 0.0
+        return round(sum(active_roles) / len(active_roles), 2)

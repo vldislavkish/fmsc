@@ -307,5 +307,21 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             row_data['Раумдойтер'] = AttackingWideMidfielder.raumdeuter_overall(row_data)
             row_data['Полуфланговый крайний полузащитник'] = AttackingWideMidfielder.inverted_winger_overall(row_data)
 
+        # Роли нападающего
+        st_prefixes = ["П", "АП", "НП"]
+        is_striker = has_position_prefix(positions_val, st_prefixes)
+        from src.roles import Striker
+
+        if is_striker:
+            row_data['Универсальность'] = Striker.overall(row_data)
+            row_data['Оттянутый форвард'] = Striker.deep_lying_forward_overall(row_data)
+            row_data['Выдвинутый форвард'] = Striker.advanced_forward_overall(row_data)
+            row_data['Таргетмен'] = Striker.target_man_overall(row_data)
+            row_data['Чистый форвард'] = Striker.poacher_overall(row_data)
+            row_data['Универсальный форвард'] = Striker.complete_forward_overall(row_data)
+            row_data['Прессингующий форвард'] = Striker.pressing_forward_overall(row_data)
+            row_data['Треквартиста'] = Striker.trequartista_overall(row_data)
+            row_data['Ложная девятка'] = Striker.false_nine_overall(row_data)
+
     print(f"✅ Парсинг завершен. Обработано строк: {len(data)}")
     return pd.DataFrame(data, columns=models.ALL_COLUMNS)
