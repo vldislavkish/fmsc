@@ -1590,10 +1590,30 @@ class AttackingMidfielder:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Треквартиста ===
+    @staticmethod
+    def trequartista_attack(player_data: dict) -> float:
+        """Треквартиста (Ат)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Зав': 0.75,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'Ибм': 1.0, 'Имп': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Инт': 0.75,
+        }
+        physical_weights = {
+            'Уск': 1.0,
+            'КРД': 0.75, 'Лвк': 0.75,
+        }
+        return AttackingMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def trequartista_overall(player_data: dict) -> float:
-        """Треквартиста (ОВР) — заглушка"""
-        return 0.0
+        """Треквартиста (ОВР) — у роли только одна обязанность (Ат)"""
+        return AttackingMidfielder.trequartista_attack(player_data)
 
     @staticmethod
     def enganche_overall(player_data: dict) -> float:
