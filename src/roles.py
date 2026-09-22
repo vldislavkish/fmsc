@@ -861,10 +861,30 @@ class DefensiveMidfielder:
         # Пока реализована только защитная обязанность
         return DefensiveMidfielder.half_back_defend(player_data)
 
+    # === Реджиста ===
+
+    @staticmethod
+    def regista_support(player_data: dict) -> float:
+        """Реджиста (По)"""
+        technical_weights = {
+            'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Длн': 0.75, 'Дрб': 0.75,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'Ибм': 1.0, 'Имп': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Инт': 0.75,
+        }
+        physical_weights = {
+            'КРД': 0.75,
+        }
+        return DefensiveMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def regista_overall(player_data: dict) -> float:
-        """Реджиста (ОВР) — заглушка"""
-        return 0.0
+        """Реджиста (ОВР) — у роли только одна обязанность (По)"""
+        return DefensiveMidfielder.regista_support(player_data)
 
     @staticmethod
     def roamer_overall(player_data: dict) -> float:
