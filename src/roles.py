@@ -1415,10 +1415,50 @@ class WideMidfielder:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Фланговый плеймейкер ===
+    @staticmethod
+    def wide_playmaker_support(player_data: dict) -> float:
+        """Фланговый плеймейкер (По)"""
+        technical_weights = {
+            'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Дрб': 0.75,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Ибм': 0.75,
+        }
+        physical_weights = {
+            'Лвк': 0.75,
+        }
+        return WideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def wide_playmaker_attack(player_data: dict) -> float:
+        """Фланговый плеймейкер (Ат)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'Ибм': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Имп': 0.75, 'Инт': 0.75,
+        }
+        physical_weights = {
+            'Лвк': 0.75, 'Уск': 0.75,
+        }
+        return WideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def wide_playmaker_overall(player_data: dict) -> float:
-        """Фланговый плеймейкер (ОВР) — заглушка"""
-        return 0.0
+        """Фланговый плеймейкер (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            WideMidfielder.wide_playmaker_support(player_data),
+            WideMidfielder.wide_playmaker_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def inverted_winger_overall(player_data: dict) -> float:
