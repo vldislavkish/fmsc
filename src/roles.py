@@ -1012,7 +1012,6 @@ class CentralMidfielder:
         return DefensiveMidfielder.roamer_overall(player_data)
 
     # === Центральный полузащитник ===
-
     @staticmethod
     def central_midfielder_defend(player_data: dict) -> float:
         """Центральный полузащитник (Зщ)"""
@@ -1077,10 +1076,30 @@ class CentralMidfielder:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Полузащитник бокс-ту-бокс ===
+    @staticmethod
+    def box_to_box_midfielder_support(player_data: dict) -> float:
+        """Полузащитник бокс-ту-бокс (По)"""
+        technical_weights = {
+            'Отб': 1.0, 'Пас': 1.0,
+            'Длн': 0.75, 'Дрб': 0.75, 'ПКас': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Ком': 1.0, 'Раб': 1.0,
+            'Агр': 0.75, 'Поз': 0.75, 'Инт': 0.75, 'ПРш': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0,
+            'КРД': 0.75, 'СИЛ': 0.75, 'Скр': 0.75, 'Уск': 0.75,
+        }
+        return CentralMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def box_to_box_midfielder_overall(player_data: dict) -> float:
-        """Полузащитник бокс-ту-бокс (ОВР) — заглушка"""
-        return 0.0
+        """Полузащитник бокс-ту-бокс (ОВР) — пока только одна обязанность (По)"""
+        return CentralMidfielder.box_to_box_midfielder_support(player_data)
 
     @staticmethod
     def advanced_playmaker_overall(player_data: dict) -> float:
