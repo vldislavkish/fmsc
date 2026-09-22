@@ -1639,10 +1639,30 @@ class AttackingMidfielder:
         """Энганче (ОВР) — у роли только одна обязанность (По)"""
         return AttackingMidfielder.enganche_support(player_data)
 
+    # === Теневой нападающий ===
+    @staticmethod
+    def shadow_striker_attack(player_data: dict) -> float:
+        """Теневой нападающий (Ат)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Зав': 1.0, 'ПКас': 1.0,
+            'Пас': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Инт': 1.0, 'Смб': 1.0,
+            'Кнц': 0.75, 'ПРш': 0.75, 'Раб': 0.75,
+        }
+        physical_weights = {
+            'Уск': 1.0,
+            'ВЫН': 0.75, 'КРД': 0.75, 'Лвк': 0.75, 'Скр': 0.75,
+        }
+        return AttackingMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def shadow_striker_overall(player_data: dict) -> float:
-        """Теневой нападающий (ОВР) — заглушка"""
-        return 0.0
+        """Теневой нападающий (ОВР) — у роли только одна обязанность (Ат)"""
+        return AttackingMidfielder.shadow_striker_attack(player_data)
 
     @staticmethod
     def overall(player_data: dict) -> float:
