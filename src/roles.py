@@ -1945,10 +1945,51 @@ class Striker:
         """Выдвинутый форвард (ОВР) — у роли только одна обязанность (Ат)"""
         return Striker.advanced_forward_attack(player_data)
 
+    # === Таргетмен ===
+    @staticmethod
+    def target_man_support(player_data: dict) -> float:
+        """Таргетмен (По)"""
+        technical_weights = {
+            'Глв': 1.0,
+            'Зав': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Ком': 1.0, 'Хрб': 1.0,
+            'Агр': 0.75, 'Ибм': 0.75, 'Инт': 0.75, 'ПРш': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ПРГ': 1.0, 'КРД': 1.0, 'СИЛ': 1.0,
+        }
+        return Striker._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def target_man_attack(player_data: dict) -> float:
+        """Таргетмен (Ат)"""
+        technical_weights = {
+            'Зав': 1.0, 'Глв': 1.0,
+            'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Смб': 1.0, 'Хрб': 1.0,
+            'Агр': 0.75, 'Инт': 0.75, 'Ком': 0.75, 'ПРш': 0.75,
+        }
+        physical_weights = {
+            'ПРГ': 1.0, 'КРД': 1.0, 'СИЛ': 1.0,
+        }
+        return Striker._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def target_man_overall(player_data: dict) -> float:
-        """Таргетмен (ОВР) — заглушка"""
-        return 0.0
+        """Таргетмен (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            Striker.target_man_support(player_data),
+            Striker.target_man_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def poacher_overall(player_data: dict) -> float:
