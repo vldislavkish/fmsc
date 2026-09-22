@@ -1253,10 +1253,71 @@ class WideMidfielder:
                            for weight in {**technical_weights, **mental_weights, **physical_weights}.values())
         return round((weighted_sum / max_possible) * 100, 2) if max_possible > 0 else 0.0
 
+    # === Фланговый полузащитник ===
+    @staticmethod
+    def winger_defend(player_data: dict) -> float:
+        """Фланговый полузащитник (Зщ)"""
+        technical_weights = {
+            'Отб': 1.0, 'Пас': 1.0,
+            'Нав': 0.75, 'Опк': 0.75, 'ПКас': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Ком': 1.0, 'Кнц': 1.0, 'ПРш': 1.0, 'Раб': 1.0,
+            'Инт': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 0.75,
+        }
+        return WideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def winger_support(player_data: dict) -> float:
+        """Фланговый полузащитник (По)"""
+        technical_weights = {
+            'Отб': 1.0, 'Пас': 1.0,
+            'Нав': 0.75, 'ПКас': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Ком': 1.0, 'ПРш': 1.0, 'Раб': 1.0,
+            'Вид': 0.75, 'Поз': 0.75, 'Ибм': 0.75,
+            'Инт': 0.75, 'Кнц': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0,
+        }
+        return WideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def winger_attack(player_data: dict) -> float:
+        """Фланговый полузащитник (Ат)"""
+        technical_weights = {
+            'Нав': 1.0, 'Пас': 1.0, 'ПКас': 1.0,
+            'Отб': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Ком': 1.0, 'ПРш': 1.0, 'Раб': 1.0,
+            'Вид': 0.75, 'Ибм': 0.75, 'Инт': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0,
+        }
+        return WideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def winger_overall(player_data: dict) -> float:
-        """Фланговый полузащитник (ОВР) — заглушка"""
-        return 0.0
+        """Фланговый полузащитник (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            WideMidfielder.winger_defend(player_data),
+            WideMidfielder.winger_support(player_data),
+            WideMidfielder.winger_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def wide_midfielder_overall(player_data: dict) -> float:
