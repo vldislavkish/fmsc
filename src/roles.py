@@ -1715,10 +1715,53 @@ class AttackingWideMidfielder:
         """Полуфланговый крайний полузащитник — делегируем к WideMidfielder"""
         return WideMidfielder.inverted_winger_overall(player_data)
 
+    # === Инсайд ===
+    @staticmethod
+    def inside_forward_support(player_data: dict) -> float:
+        """Инсайд (По)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Длн': 0.75, 'Зав': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0,
+            'Вид': 0.75, 'Имп': 0.75, 'Инт': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'КРД': 1.0, 'Лвк': 1.0, 'Уск': 1.0,
+            'Скр': 0.75,
+        }
+        return AttackingWideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def inside_forward_attack(player_data: dict) -> float:
+        """Инсайд (Ат)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Зав': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Длн': 0.75, 'Пас': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0,
+            'Имп': 0.75, 'Инт': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'КРД': 1.0, 'Лвк': 1.0, 'Уск': 1.0,
+            'Скр': 0.75,
+        }
+        return AttackingWideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def inside_forward_overall(player_data: dict) -> float:
-        """Инсайд (ОВР) — заглушка"""
-        return 0.0
+        """Инсайд (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            AttackingWideMidfielder.inside_forward_support(player_data),
+            AttackingWideMidfielder.inside_forward_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def target_man_winger_overall(player_data: dict) -> float:
