@@ -1101,10 +1101,50 @@ class CentralMidfielder:
         """Полузащитник бокс-ту-бокс (ОВР) — пока только одна обязанность (По)"""
         return CentralMidfielder.box_to_box_midfielder_support(player_data)
 
+    # === Выдвинутый плеймейкер ===
+    @staticmethod
+    def advanced_playmaker_support(player_data: dict) -> float:
+        """Выдвинутый плеймейкер (По)"""
+        technical_weights = {
+            'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Дрб': 0.75,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'Ибм': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Имп': 0.75, 'Инт': 0.75,
+        }
+        physical_weights = {
+            'Лвк': 0.75,
+        }
+        return CentralMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def advanced_playmaker_attack(player_data: dict) -> float:
+        """Выдвинутый плеймейкер (Ат)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'Ибм': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Имп': 0.75, 'Инт': 0.75,
+        }
+        physical_weights = {
+            'Лвк': 0.75, 'Уск': 0.75,
+        }
+        return CentralMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def advanced_playmaker_overall(player_data: dict) -> float:
-        """Выдвинутый плеймейкер (ОВР) — заглушка"""
-        return 0.0
+        """Выдвинутый плеймейкер (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            CentralMidfielder.advanced_playmaker_support(player_data),
+            CentralMidfielder.advanced_playmaker_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def mezzala_overall(player_data: dict) -> float:
