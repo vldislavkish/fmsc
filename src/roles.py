@@ -913,10 +913,54 @@ class DefensiveMidfielder:
         """Блуждающий плеймейкер (ОВР) — у роли только одна обязанность (По)"""
         return DefensiveMidfielder.roamer_support(player_data)
 
+    # === Сегундо-воланте ===
+
+    @staticmethod
+    def segundo_volante_support(player_data: dict) -> float:
+        """Сегундо-воланте (По)"""
+        technical_weights = {
+            'Опк': 1.0, 'Отб': 1.0, 'Пас': 1.0,
+            'Длн': 0.75, 'Зав': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Ибм': 1.0, 'Раб': 1.0,
+            'Инт': 0.75, 'Кнц': 0.75, 'ПРш': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0, 'Скр': 1.0,
+            'КРД': 0.75, 'СИЛ': 0.75, 'Уск': 0.75,
+        }
+        return DefensiveMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def segundo_volante_attack(player_data: dict) -> float:
+        """Сегундо-воланте (Ат)"""
+        technical_weights = {
+            'Длн': 1.0, 'Зав': 1.0, 'Отб': 1.0, 'Пас': 1.0,
+            'Опк': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Ибм': 1.0, 'Инт': 1.0, 'Раб': 1.0,
+            'Кнц': 0.75, 'ПРш': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0, 'Скр': 1.0,
+            'КРД': 0.75, 'СИЛ': 0.75, 'Уск': 0.75,
+        }
+        return DefensiveMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def segundo_volante_overall(player_data: dict) -> float:
-        """Сегундо-воланте (ОВР) — заглушка"""
-        return 0.0
+        """Сегундо-воланте (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            DefensiveMidfielder.segundo_volante_support(player_data),
+            DefensiveMidfielder.segundo_volante_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def overall(player_data: dict) -> float:
