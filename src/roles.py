@@ -2015,10 +2015,53 @@ class Striker:
         """Чистый форвард (ОВР) — у роли только одна обязанность (Ат)"""
         return Striker.poacher_attack(player_data)
 
+    # === Универсальный форвард ===
+    @staticmethod
+    def complete_forward_support(player_data: dict) -> float:
+        """Универсальный форвард (По)"""
+        technical_weights = {
+            'Длн': 1.0, 'Дрб': 1.0, 'Глв': 1.0, 'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Зав': 0.75,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'Ибм': 1.0, 'Инт': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Ком': 0.75, 'Раб': 0.75,
+        }
+        physical_weights = {
+            'Лвк': 1.0, 'СИЛ': 1.0, 'Уск': 1.0,
+            'ВЫН': 0.75, 'ПРГ': 0.75, 'КРД': 0.75, 'Скр': 0.75,
+        }
+        return Striker._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def complete_forward_attack(player_data: dict) -> float:
+        """Универсальный форвард (Ат)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Зав': 1.0, 'Глв': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Длн': 0.75, 'Пас': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Инт': 1.0, 'Смб': 1.0,
+            'Вид': 0.75, 'Ком': 0.75, 'ПРш': 0.75, 'Раб': 0.75,
+        }
+        physical_weights = {
+            'Лвк': 1.0, 'СИЛ': 1.0, 'Уск': 1.0,
+            'ВЫН': 0.75, 'ПРГ': 0.75, 'КРД': 0.75, 'Скр': 0.75,
+        }
+        return Striker._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def complete_forward_overall(player_data: dict) -> float:
-        """Универсальный форвард (ОВР) — заглушка"""
-        return 0.0
+        """Универсальный форвард (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            Striker.complete_forward_support(player_data),
+            Striker.complete_forward_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def pressing_forward_overall(player_data: dict) -> float:
