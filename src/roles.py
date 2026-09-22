@@ -1991,10 +1991,29 @@ class Striker:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Чистый форвард ===
+    @staticmethod
+    def poacher_attack(player_data: dict) -> float:
+        """Чистый форвард (Ат)"""
+        technical_weights = {
+            'Зав': 1.0,
+            'Глв': 0.75, 'ПКас': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Инт': 1.0, 'Смб': 1.0,
+            'ПРш': 0.75,
+        }
+        physical_weights = {
+            'Уск': 0.75,
+        }
+        return Striker._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def poacher_overall(player_data: dict) -> float:
-        """Чистый форвард (ОВР) — заглушка"""
-        return 0.0
+        """Чистый форвард (ОВР) — у роли только одна обязанность (Ат)"""
+        return Striker.poacher_attack(player_data)
 
     @staticmethod
     def complete_forward_overall(player_data: dict) -> float:
