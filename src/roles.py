@@ -2128,10 +2128,30 @@ class Striker:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Ложная девятка ===
+    @staticmethod
+    def false_nine_support(player_data: dict) -> float:
+        """Ложная девятка (По)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Зав': 0.75,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'Ибм': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Имп': 0.75, 'Инт': 0.75, 'Ком': 0.75,
+        }
+        physical_weights = {
+            'Лвк': 1.0, 'Уск': 1.0,
+            'КРД': 0.75,
+        }
+        return Striker._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def false_nine_overall(player_data: dict) -> float:
-        """Ложная девятка (ОВР) — заглушка"""
-        return 0.0
+        """Ложная девятка (ОВР) — у роли только одна обязанность (По)"""
+        return Striker.false_nine_support(player_data)
 
     @staticmethod
     def overall(player_data: dict) -> float:
