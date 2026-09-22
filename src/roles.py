@@ -1811,10 +1811,30 @@ class AttackingWideMidfielder:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Раумдойтер ===
     @staticmethod
-    def Raumdeuter_overall(player_data: dict) -> float:
-        """Раумдойтер (ОВР) — заглушка"""
-        return 0.0
+    def raumdeuter_attack(player_data: dict) -> float:
+        """Раумдойтер (Ат)"""
+        technical_weights = {
+            'Зав': 1.0,
+            'ПКас': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Инт': 1.0, 'Кнц': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Раб': 0.75,
+        }
+        physical_weights = {
+            'КРД': 1.0,
+            'ВЫН': 0.75, 'Уск': 0.75,
+        }
+        return AttackingWideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def raumdeuter_overall(player_data: dict) -> float:
+        """Раумдойтер (ОВР) — у роли только одна обязанность (Ат)"""
+        return AttackingWideMidfielder.raumdeuter_attack(player_data)
 
     @staticmethod
     def overall(player_data: dict) -> float:
@@ -1825,7 +1845,7 @@ class AttackingWideMidfielder:
             AttackingWideMidfielder.inside_forward_overall(player_data),
             AttackingWideMidfielder.trequartista_overall(player_data),
             AttackingWideMidfielder.target_man_winger_overall(player_data),
-            AttackingWideMidfielder.Raumdeuter_overall(player_data),
+            AttackingWideMidfielder.raumdeuter_overall(player_data),
             AttackingWideMidfielder.inverted_winger_overall(player_data),
         ]
         active_roles = [r for r in roles if r > 0]
