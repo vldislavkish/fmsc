@@ -835,10 +835,31 @@ class DefensiveMidfielder:
         # Пока реализована только защитная обязанность
         return DefensiveMidfielder.anchor_man_defend(player_data)
 
+    # === Хавбек ===
+
+    @staticmethod
+    def half_back_defend(player_data: dict) -> float:
+        """Хавбек (Зщ)"""
+        technical_weights = {
+            'Опк': 1.0, 'Отб': 1.0,
+            'Пас': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Инт': 1.0, 'Ком': 1.0, 'Кнц': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Агр': 0.75, 'Раб': 0.75, 'Хрб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 0.75, 'ПРГ': 0.75, 'СИЛ': 0.75,
+        }
+        return DefensiveMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def half_back_overall(player_data: dict) -> float:
-        """Хавбек (ОВР) — заглушка"""
-        return 0.0
+        """Хавбек (ОВР)"""
+        # Пока реализована только защитная обязанность
+        return DefensiveMidfielder.half_back_defend(player_data)
 
     @staticmethod
     def regista_overall(player_data: dict) -> float:
