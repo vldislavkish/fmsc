@@ -1146,10 +1146,53 @@ class CentralMidfielder:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Меццала ===
+    @staticmethod
+    def mezzala_support(player_data: dict) -> float:
+        """Меццала (По)"""
+        technical_weights = {
+            'Пас': 1.0, 'Тех': 1.0,
+            'Длн': 0.75, 'Дрб': 0.75, 'Отб': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'ПРш': 1.0, 'Раб': 1.0,
+            'Вид': 0.75, 'Инт': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'Уск': 1.0,
+            'ВЫН': 0.75, 'КРД': 0.75,
+        }
+        return CentralMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def mezzala_attack(player_data: dict) -> float:
+        """Меццала (Ат)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Пас': 1.0, 'Тех': 1.0,
+            'Длн': 0.75, 'Зав': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'Ибм': 1.0, 'ПРш': 1.0, 'Раб': 1.0,
+            'Имп': 0.75, 'Инт': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'Уск': 1.0,
+            'ВЫН': 0.75, 'КРД': 0.75,
+        }
+        return CentralMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def mezzala_overall(player_data: dict) -> float:
-        """Меццала (ОВР) — заглушка"""
-        return 0.0
+        """Меццала (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            CentralMidfielder.mezzala_support(player_data),
+            CentralMidfielder.mezzala_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def carrilero_overall(player_data: dict) -> float:
