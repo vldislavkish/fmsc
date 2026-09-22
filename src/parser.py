@@ -2,6 +2,7 @@
 Парсер HTML файлов из Football Manager
 """
 import os
+import re
 import glob
 import math
 import pandas as pd
@@ -26,14 +27,48 @@ def has_position_prefix(positions_str, prefixes: list) -> bool:
     if not positions_str or str(positions_str).strip() == '':
         return False
 
-    # Генератор для разбивки по запятым
-    elements = (item.strip() for item in str(positions_str).split(','))
+    # Заменяем '/' на ',' чтобы корректно парсить позиции вида "П/АП (ПЦ)"
+    normalized_str = str(positions_str).replace('/', ',')
+    elements = (item.strip() for item in normalized_str.split(','))
 
-    # Проверяем каждую позицию на совпадение с префиксами
     return any(
         any(pos.startswith(prefix) for prefix in prefixes)
-        for pos in elements
+        for pos in elements if pos
     )
+
+
+def parse_single_money(value_str: str) -> float:
+    if not value_str:
+        return None
+
+    # Убираем "в год" и символы валюты
+    value_str = value_str.split('в')[0].strip() if 'в' in value_str else value_str
+    value_str = value_str.replace('€', '').replace(' ', '').strip()
+
+    # Проверяем суффиксы млн/тыс ДО удаления запятых
+    multiplier = 1
+    if 'млн' in value_str.lower():
+        multiplier = 1_000_000
+        value_str = value_str.lower().replace('млн', '')
+    elif 'тыс' in value_str.lower():
+        multiplier = 1_000
+        value_str = value_str.lower().replace('тыс', '')
+
+    # Убираем лишние точки в конце (например, "9.2млн." -> "9.2")
+    value_str = value_str.strip('.')
+
+    # сначала удаляем все запятые (разделители тысяч)
+    value_str = value_str.replace(',', '')
+
+    # Теперь извлекаем число
+    match = re.search(r'[\d]+\.?[\d]*', value_str)
+    if match:
+        try:
+            return float(match.group(0)) * multiplier
+        except ValueError:
+            return None
+    return None
+
 
 def parse_money_value(value_str: str) -> float:
     if not value_str or value_str.strip() == '-' or 'Не продаётся' in value_str or 'Не продается' in value_str:
@@ -47,24 +82,6 @@ def parse_money_value(value_str: str) -> float:
                 return (val1 + val2) / 2
         return None
     return parse_single_money(value_str.strip())
-
-
-def parse_single_money(value_str: str) -> float:
-    if not value_str:
-        return None
-    value_str = value_str.split('в')[0].strip() if 'в' in value_str else value_str
-    value_str = value_str.replace('€', '').replace(' ', '').replace(',', '').strip()
-    multiplier = 1
-    if 'млн' in value_str.lower():
-        multiplier = 1_000_000
-        value_str = value_str.lower().replace('млн', '').replace('.', '')
-    elif 'тыс' in value_str.lower():
-        multiplier = 1_000
-        value_str = value_str.lower().replace('тыс', '').replace('.', '')
-    try:
-        return float(value_str) * multiplier
-    except ValueError:
-        return None
 
 
 def calculate_age_coefficient(age: int) -> float:
@@ -178,7 +195,7 @@ def parse_squad(html_path: str) -> pd.DataFrame:
         transfer_value = parse_money_value(row_data.get('Сумма транфера', ''))
         if transfer_value is None:
             row_data['Сумма трансфера (€)'] = float('nan')
-            row_data['Продаётся'] = False # Оставляем для внутренней логики, если понадобится
+            row_data['Продаётся'] = False
         else:
             row_data['Сумма трансфера (€)'] = transfer_value
             row_data['Продаётся'] = True
@@ -224,15 +241,12 @@ def parse_squad(html_path: str) -> pd.DataFrame:
         is_fullback = has_position_prefix(positions_val, fb_prefixes)
         from src.roles import FullBack
         if is_fullback:
+            row_data['Универсальность'] = FullBack.overall(row_data)
             row_data['Фланговый защитник'] = FullBack.wing_back_overall(row_data)
             row_data['Крайний защитник'] = FullBack.full_back_overall(row_data)
             row_data['Атакующий крайний защитник'] = FullBack.attacking_wing_back_overall(row_data)
             row_data['Полуфланговый крайний защитник'] = FullBack.half_wing_back_overall(row_data)
             row_data['Чистый крайний защитник'] = FullBack.no_nonsense_full_back_overall(row_data)
-
-        data.append(row_data)
-        if idx % 1000 == 0:
-            print(f"   ⏳ Обработано: {idx} строк")
 
         # Роли опорного полузащитника
         dm_prefixes = ["З", "КЗ", "ОП", "П"]
@@ -322,6 +336,10 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             row_data['Прессингующий форвард'] = Striker.pressing_forward_overall(row_data)
             row_data['Треквартиста'] = Striker.trequartista_overall(row_data)
             row_data['Ложная девятка'] = Striker.false_nine_overall(row_data)
+
+        data.append(row_data)
+        if idx % 1000 == 0:
+            print(f"   ⏳ Обработано: {idx} строк")
 
     print(f"✅ Парсинг завершен. Обработано строк: {len(data)}")
     return pd.DataFrame(data, columns=models.ALL_COLUMNS)
