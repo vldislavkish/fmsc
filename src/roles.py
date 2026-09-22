@@ -2063,10 +2063,70 @@ class Striker:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Прессингующий форвард ===
+    @staticmethod
+    def pressing_forward_defend(player_data: dict) -> float:
+        """Прессингующий форвард (Зщ)"""
+        technical_weights = {
+            'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Агр': 1.0, 'Инт': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Раб': 1.0, 'Хрб': 1.0,
+            'Кнц': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0, 'Скр': 1.0, 'Уск': 1.0,
+            'КРД': 0.75, 'Лвк': 0.75, 'СИЛ': 0.75,
+        }
+        return Striker._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def pressing_forward_support(player_data: dict) -> float:
+        """Прессингующий форвард (По)"""
+        technical_weights = {
+            'Пас': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Агр': 1.0, 'Инт': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Раб': 1.0, 'Хрб': 1.0,
+            'Ибм': 0.75, 'Кнц': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0, 'Скр': 1.0, 'Уск': 1.0,
+            'КРД': 0.75, 'Лвк': 0.75, 'СИЛ': 0.75,
+        }
+        return Striker._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def pressing_forward_attack(player_data: dict) -> float:
+        """Прессингующий форвард (Ат)"""
+        technical_weights = {
+            'Зав': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Агр': 1.0, 'Ибм': 1.0, 'Инт': 1.0, 'Ком': 1.0, 'Раб': 1.0, 'Хрб': 1.0,
+            'Кнц': 0.75, 'ПРш': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0, 'Скр': 1.0, 'Уск': 1.0,
+            'КРД': 0.75, 'Лвк': 0.75, 'СИЛ': 0.75,
+        }
+        return Striker._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def pressing_forward_overall(player_data: dict) -> float:
-        """Прессингующий форвард (ОВР) — заглушка"""
-        return 0.0
+        """Прессингующий форвард (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            Striker.pressing_forward_defend(player_data),
+            Striker.pressing_forward_support(player_data),
+            Striker.pressing_forward_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def false_nine_overall(player_data: dict) -> float:
