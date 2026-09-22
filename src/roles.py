@@ -886,10 +886,32 @@ class DefensiveMidfielder:
         """Реджиста (ОВР) — у роли только одна обязанность (По)"""
         return DefensiveMidfielder.regista_support(player_data)
 
+    # === Блуждающий плеймейкер ===
+
+    @staticmethod
+    def roamer_support(player_data: dict) -> float:
+        """Блуждающий плеймейкер (По)"""
+        technical_weights = {
+            'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Длн': 0.75, 'Дрб': 0.75,
+        }
+        mental_weights = {
+            'Вид': 1.0, 'Ибм': 1.0, 'Инт': 1.0, 'Ком': 1.0,
+            'ПРш': 1.0, 'Раб': 1.0, 'Смб': 1.0,
+            'Поз': 0.75, 'Кнц': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0, 'Уск': 1.0,
+            'КРД': 0.75, 'Лвк': 0.75, 'Скр': 0.75,
+        }
+        return DefensiveMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def roamer_overall(player_data: dict) -> float:
-        """Блуждающий плеймейкер (ОВР) — заглушка"""
-        return 0.0
+        """Блуждающий плеймейкер (ОВР) — у роли только одна обязанность (По)"""
+        return DefensiveMidfielder.roamer_support(player_data)
 
     @staticmethod
     def segundo_volante_overall(player_data: dict) -> float:
