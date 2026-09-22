@@ -810,10 +810,30 @@ class DefensiveMidfielder:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Чистый опорный полузащитник ===
+
+    @staticmethod
+    def anchor_man_defend(player_data: dict) -> float:
+        """Чистый опорный полузащитник (Зщ)"""
+        technical_weights = {
+            'Опк': 1.0, 'Отб': 1.0,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Инт': 1.0, 'Кнц': 1.0, 'ПРш': 1.0,
+            'Ком': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'СИЛ': 0.75,
+        }
+        return DefensiveMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def anchor_man_overall(player_data: dict) -> float:
-        """Чистый опорный полузащитник (ОВР) — заглушка"""
-        return 0.0
+        """Чистый опорный полузащитник (ОВР)"""
+        # Пока реализована только защитная обязанность
+        return DefensiveMidfielder.anchor_man_defend(player_data)
 
     @staticmethod
     def half_back_overall(player_data: dict) -> float:
