@@ -1236,3 +1236,59 @@ class CentralMidfielder:
         if not active_roles:
             return 0.0
         return round(sum(active_roles) / len(active_roles), 2)
+
+
+class WideMidfielder:
+    """Класс для расчёта ролей крайнего полузащитника."""
+
+    @staticmethod
+    def _calculate_role(player_data: dict,
+                        technical_weights: dict,
+                        mental_weights: dict,
+                        physical_weights: dict) -> float:
+        """Универсальный метод расчёта роли."""
+        weighted_sum = sum(player_data.get(attr, 0) * weight
+                           for attr, weight in {**technical_weights, **mental_weights, **physical_weights}.items())
+        max_possible = sum(20 * weight
+                           for weight in {**technical_weights, **mental_weights, **physical_weights}.values())
+        return round((weighted_sum / max_possible) * 100, 2) if max_possible > 0 else 0.0
+
+    @staticmethod
+    def winger_overall(player_data: dict) -> float:
+        """Фланговый полузащитник (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def wide_midfielder_overall(player_data: dict) -> float:
+        """Крайний полузащитник (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def defensive_winger_overall(player_data: dict) -> float:
+        """Крайний полузащитник оборон. плана (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def wide_playmaker_overall(player_data: dict) -> float:
+        """Фланговый плеймейкер (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def inverted_winger_overall(player_data: dict) -> float:
+        """Полуфланговый крайний полузащитник (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def overall(player_data: dict) -> float:
+        """Универсальность КП — среднее всех 5 ролей"""
+        roles = [
+            WideMidfielder.winger_overall(player_data),
+            WideMidfielder.wide_midfielder_overall(player_data),
+            WideMidfielder.defensive_winger_overall(player_data),
+            WideMidfielder.wide_playmaker_overall(player_data),
+            WideMidfielder.inverted_winger_overall(player_data),
+        ]
+        active_roles = [r for r in roles if r > 0]
+        if not active_roles:
+            return 0.0
+        return round(sum(active_roles) / len(active_roles), 2)

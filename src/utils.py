@@ -42,6 +42,9 @@ def format_sheet(ws, columns: list, freeze_col: str = 'L2') -> None:
         'Блуждающий плеймейкер', 'Сегундо-воланте',
         'Центральный полузащитник', 'Полузащитник бокс-ту-бокс',
         'Выдвинутый плеймейкер', 'Меццала', 'Каррилеро',
+        'Фланговый полузащитник', 'Крайний полузащитник',
+        'Крайний полузащитник оборон. плана', 'Фланговый плеймейкер',
+        'Полуфланговый крайний полузащитник',
     ]
     for col_idx in range(1, len(columns) + 1):
         col_letter = get_column_letter(col_idx)
@@ -138,6 +141,19 @@ def save_to_excel_formatted(df: pd.DataFrame, output_path: str) -> None:
 
         for row in range(2, ws_cm.max_row + 1):
             ws_cm.cell(row=row, column=12).value = f'=AVERAGE(M{row}:T{row})'
+
+        # === Лист "Крайний полузащитник" ===
+        # Позиции: "КЗ", "ОП", "П", "АП"
+        wm_prefixes = ["КЗ", "ОП", "П", "АП"]
+        mask_wm = df['Позиции'].apply(lambda x: has_position_prefix(x, wm_prefixes))
+        df_wm = df[mask_wm][models.WIDE_MIDFIELDER_COLUMNS].copy()
+        df_wm.to_excel(writer, sheet_name='Крайний полузащитник', index=False)
+        ws_wm = writer.sheets['Крайний полузащитник']
+        format_sheet(ws_wm, models.WIDE_MIDFIELDER_COLUMNS, freeze_col='M2')
+
+        # Формула "Универсальность" = среднее 5 ролей (колонки M-Q)
+        for row in range(2, ws_wm.max_row + 1):
+            ws_wm.cell(row=row, column=12).value = f'=AVERAGE(M{row}:Q{row})'
 
     print(f"💾 Excel с форматированием сохранен: {output_path}")
 
