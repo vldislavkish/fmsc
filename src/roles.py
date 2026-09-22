@@ -1011,10 +1011,71 @@ class CentralMidfielder:
         """Блуждающий плеймейкер — используем реализацию из DefensiveMidfielder"""
         return DefensiveMidfielder.roamer_overall(player_data)
 
+    # === Центральный полузащитник ===
+
+    @staticmethod
+    def central_midfielder_defend(player_data: dict) -> float:
+        """Центральный полузащитник (Зщ)"""
+        technical_weights = {
+            'Отб': 1.0,
+            'Опк': 0.75, 'Пас': 0.75, 'ПКас': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Ком': 1.0, 'Кнц': 1.0, 'ПРш': 1.0,
+            'Агр': 0.75, 'Инт': 0.75, 'Раб': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 0.75,
+        }
+        return CentralMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def central_midfielder_support(player_data: dict) -> float:
+        """Центральный полузащитник (По)"""
+        technical_weights = {
+            'Отб': 1.0, 'Пас': 1.0, 'ПКас': 1.0,
+            'Тех': 0.75,
+        }
+        mental_weights = {
+            'Ком': 1.0, 'ПРш': 1.0,
+            'Вид': 0.75, 'Ибм': 0.75, 'Инт': 0.75, 'Кнц': 0.75, 'Раб': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 0.75,
+        }
+        return CentralMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def central_midfielder_attack(player_data: dict) -> float:
+        """Центральный полузащитник (Ат)"""
+        technical_weights = {
+            'Пас': 1.0, 'ПКас': 1.0,
+            'Длн': 0.75, 'Отб': 0.75, 'Тех': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'ПРш': 1.0,
+            'Вид': 0.75, 'Инт': 0.75, 'Ком': 0.75, 'Раб': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 0.75, 'Уск': 0.75,
+        }
+        return CentralMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def central_midfielder_overall(player_data: dict) -> float:
-        """Центральный полузащитник (ОВР) — заглушка"""
-        return 0.0
+        """Центральный полузащитник (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            CentralMidfielder.central_midfielder_defend(player_data),
+            CentralMidfielder.central_midfielder_support(player_data),
+            CentralMidfielder.central_midfielder_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def box_to_box_midfielder_overall(player_data: dict) -> float:
