@@ -1367,10 +1367,53 @@ class WideMidfielder:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Крайний полузащитник оборон. плана ===
+    @staticmethod
+    def defensive_winger_defend(player_data: dict) -> float:
+        """Крайний полузащитник оборон. плана (Зщ)"""
+        technical_weights = {
+            'Тех': 1.0,
+            'Дрб': 0.75, 'Нав': 0.75, 'Опк': 0.75, 'Отб': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Ибм': 1.0, 'Инт': 1.0, 'Ком': 1.0, 'Раб': 1.0,
+            'Агр': 0.75, 'Кнц': 0.75, 'ПРш': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0,
+            'Уск': 0.75,
+        }
+        return WideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def defensive_winger_support(player_data: dict) -> float:
+        """Крайний полузащитник оборон. плана (По)"""
+        technical_weights = {
+            'Нав': 1.0, 'Тех': 1.0,
+            'Дрб': 0.75, 'Опк': 0.75, 'Отб': 0.75, 'Пас': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Ком': 1.0, 'Раб': 1.0,
+            'Агр': 0.75, 'Поз': 0.75, 'Инт': 0.75, 'Кнц': 0.75, 'ПРш': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0,
+            'Уск': 0.75,
+        }
+        return WideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def defensive_winger_overall(player_data: dict) -> float:
-        """Крайний полузащитник оборон. плана (ОВР) — заглушка"""
-        return 0.0
+        """Крайний полузащитник оборон. плана (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            WideMidfielder.defensive_winger_defend(player_data),
+            WideMidfielder.defensive_winger_support(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def wide_playmaker_overall(player_data: dict) -> float:
