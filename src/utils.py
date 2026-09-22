@@ -45,6 +45,7 @@ def format_sheet(ws, columns: list, freeze_col: str = 'L2') -> None:
         'Фланговый полузащитник', 'Крайний полузащитник',
         'Крайний полузащитник оборон. плана', 'Фланговый плеймейкер',
         'Полуфланговый крайний полузащитник',
+        'Атакующий полузащитник', 'Треквартиста', 'Энганче', 'Теневой нападающий',
     ]
     for col_idx in range(1, len(columns) + 1):
         col_letter = get_column_letter(col_idx)
@@ -151,9 +152,20 @@ def save_to_excel_formatted(df: pd.DataFrame, output_path: str) -> None:
         ws_wm = writer.sheets['Крайний полузащитник']
         format_sheet(ws_wm, models.WIDE_MIDFIELDER_COLUMNS, freeze_col='M2')
 
-        # Формула "Универсальность" = среднее 5 ролей (колонки M-Q)
         for row in range(2, ws_wm.max_row + 1):
             ws_wm.cell(row=row, column=12).value = f'=AVERAGE(M{row}:Q{row})'
+
+        # === Лист "Атакующий полузащитник" ===
+        # Позиции: "П", "АП", "НП"
+        am_prefixes = ["П", "АП", "НП"]
+        mask_am = df['Позиции'].apply(lambda x: has_position_prefix(x, am_prefixes))
+        df_am = df[mask_am][models.ATTACKING_MIDFIELDER_COLUMNS].copy()
+        df_am.to_excel(writer, sheet_name='Атакующий полузащитник', index=False)
+        ws_am = writer.sheets['Атакующий полузащитник']
+        format_sheet(ws_am, models.ATTACKING_MIDFIELDER_COLUMNS, freeze_col='M2')
+
+        for row in range(2, ws_am.max_row + 1):
+            ws_am.cell(row=row, column=12).value = f'=AVERAGE(M{row}:Q{row})'
 
     print(f"💾 Excel с форматированием сохранен: {output_path}")
 

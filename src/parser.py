@@ -279,5 +279,18 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             row_data['Фланговый плеймейкер'] = WideMidfielder.wide_playmaker_overall(row_data)
             row_data['Полуфланговый крайний полузащитник'] = WideMidfielder.inverted_winger_overall(row_data)
 
+        # Роли атакующего полузащитника
+        am_prefixes = ["П", "АП", "НП"]
+        is_attacking_midfielder = has_position_prefix(positions_val, am_prefixes)
+        from src.roles import AttackingMidfielder
+
+        if is_attacking_midfielder:
+            row_data['Универсальность'] = AttackingMidfielder.overall(row_data)
+            row_data['Атакующий полузащитник'] = AttackingMidfielder.attacking_midfielder_overall(row_data)
+            row_data['Выдвинутый плеймейкер'] = AttackingMidfielder.advanced_playmaker_overall(row_data)
+            row_data['Треквартиста'] = AttackingMidfielder.trequartista_overall(row_data)
+            row_data['Энганче'] = AttackingMidfielder.enganche_overall(row_data)
+            row_data['Теневой нападающий'] = AttackingMidfielder.shadow_striker_overall(row_data)
+
     print(f"✅ Парсинг завершен. Обработано строк: {len(data)}")
     return pd.DataFrame(data, columns=models.ALL_COLUMNS)

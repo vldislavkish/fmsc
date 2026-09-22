@@ -1522,3 +1522,59 @@ class WideMidfielder:
         if not active_roles:
             return 0.0
         return round(sum(active_roles) / len(active_roles), 2)
+
+
+class AttackingMidfielder:
+    """Класс для расчёта ролей атакующего полузащитника."""
+
+    @staticmethod
+    def _calculate_role(player_data: dict,
+                        technical_weights: dict,
+                        mental_weights: dict,
+                        physical_weights: dict) -> float:
+        """Универсальный метод расчёта роли."""
+        weighted_sum = sum(player_data.get(attr, 0) * weight
+                           for attr, weight in {**technical_weights, **mental_weights, **physical_weights}.items())
+        max_possible = sum(20 * weight
+                           for weight in {**technical_weights, **mental_weights, **physical_weights}.values())
+        return round((weighted_sum / max_possible) * 100, 2) if max_possible > 0 else 0.0
+
+    @staticmethod
+    def advanced_playmaker_overall(player_data: dict) -> float:
+        """Выдвинутый плеймейкер — используем реализацию из CentralMidfielder"""
+        return CentralMidfielder.advanced_playmaker_overall(player_data)
+
+    @staticmethod
+    def attacking_midfielder_overall(player_data: dict) -> float:
+        """Атакующий полузащитник (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def trequartista_overall(player_data: dict) -> float:
+        """Треквартиста (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def enganche_overall(player_data: dict) -> float:
+        """Энганче (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def shadow_striker_overall(player_data: dict) -> float:
+        """Теневой нападающий (ОВР) — заглушка"""
+        return 0.0
+
+    @staticmethod
+    def overall(player_data: dict) -> float:
+        """Универсальность АП — среднее всех 5 ролей"""
+        roles = [
+            AttackingMidfielder.attacking_midfielder_overall(player_data),
+            AttackingMidfielder.advanced_playmaker_overall(player_data),
+            AttackingMidfielder.trequartista_overall(player_data),
+            AttackingMidfielder.enganche_overall(player_data),
+            AttackingMidfielder.shadow_striker_overall(player_data),
+        ]
+        active_roles = [r for r in roles if r > 0]
+        if not active_roles:
+            return 0.0
+        return round(sum(active_roles) / len(active_roles), 2)
