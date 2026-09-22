@@ -717,10 +717,50 @@ class DefensiveMidfielder:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Оттянутый плеймейкер ===
+    @staticmethod
+    def deep_lying_playmaker_defend(player_data: dict) -> float:
+        """Оттянутый плеймейкер (Зщ)"""
+        technical_weights = {
+            'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Отб': 0.75,
+        }
+        mental_weights = {
+            'ВПл': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Поз': 0.75, 'Инт': 0.75,
+        }
+        physical_weights = {
+            'КРД': 0.75,
+        }
+        return DefensiveMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def deep_lying_playmaker_support(player_data: dict) -> float:
+        """Оттянутый плеймейкер (По)"""
+        technical_weights = {
+            'Пас': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+        }
+        mental_weights = {
+            'ВПл': 1.0, 'Ком': 1.0, 'ПРш': 1.0, 'Смб': 1.0,
+            'Поз': 0.75, 'Ибм': 0.75, 'Инт': 0.75,
+        }
+        physical_weights = {
+            'КРД': 0.75,
+        }
+        return DefensiveMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def deep_lying_playmaker_overall(player_data: dict) -> float:
-        """Оттянутый плеймейкер (ОВР) — заглушка"""
-        return 0.0
+        """Оттянутый плеймейкер (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            DefensiveMidfielder.deep_lying_playmaker_defend(player_data),
+            DefensiveMidfielder.deep_lying_playmaker_support(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def ball_winning_midfielder_overall(player_data: dict) -> float:
