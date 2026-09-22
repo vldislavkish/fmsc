@@ -1194,10 +1194,30 @@ class CentralMidfielder:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Каррилеро ===
+    @staticmethod
+    def carrilero_support(player_data: dict) -> float:
+        """Каррилеро (По)"""
+        technical_weights = {
+            'Отб': 1.0, 'Пас': 1.0, 'ПКас': 1.0,
+            'Тех': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Ком': 1.0, 'ПРш': 1.0,
+            'Вид': 0.75, 'Ибм': 0.75, 'Инт': 0.75,
+            'Кнц': 0.75, 'Раб': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0,
+        }
+        return CentralMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def carrilero_overall(player_data: dict) -> float:
-        """Каррилеро (ОВР) — заглушка"""
-        return 0.0
+        """Каррилеро (ОВР) — у роли только одна обязанность (По)"""
+        return CentralMidfielder.carrilero_support(player_data)
 
     @staticmethod
     def overall(player_data: dict) -> float:
