@@ -762,10 +762,53 @@ class DefensiveMidfielder:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Полузащитник-разрушитель ===
+    @staticmethod
+    def ball_winning_midfielder_defend(player_data: dict) -> float:
+        """Полузащитник-разрушитель (Зщ)"""
+        technical_weights = {
+            'Отб': 1.0,
+            'Опк': 0.75,
+        }
+        mental_weights = {
+            'Агр': 1.0, 'Инт': 1.0, 'Ком': 1.0, 'Раб': 1.0,
+            'Поз': 0.75, 'Кнц': 0.75, 'Хрб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0,
+            'Лвк': 0.75, 'СИЛ': 0.75, 'Скр': 0.75,
+        }
+        return DefensiveMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def ball_winning_midfielder_support(player_data: dict) -> float:
+        """Полузащитник-разрушитель (По)"""
+        technical_weights = {
+            'Отб': 1.0,
+            'Опк': 0.75, 'Пас': 0.75,
+        }
+        mental_weights = {
+            'Агр': 1.0, 'Инт': 1.0, 'Ком': 1.0, 'Раб': 1.0,
+            'Кнц': 0.75, 'Хрб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 1.0,
+            'Лвк': 0.75, 'СИЛ': 0.75, 'Скр': 0.75,
+        }
+        return DefensiveMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def ball_winning_midfielder_overall(player_data: dict) -> float:
-        """Полузащитник-разрушитель (ОВР) — заглушка"""
-        return 0.0
+        """Полузащитник-разрушитель (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            DefensiveMidfielder.ball_winning_midfielder_defend(player_data),
+            DefensiveMidfielder.ball_winning_midfielder_support(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def anchor_man_overall(player_data: dict) -> float:
