@@ -1319,10 +1319,53 @@ class WideMidfielder:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Крайний полузащитник ===
+    @staticmethod
+    def wide_midfielder_support(player_data: dict) -> float:
+        """Крайний полузащитник (По)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Нав': 1.0, 'Тех': 1.0,
+            'Пас': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0,
+            'Раб': 0.75,
+        }
+        physical_weights = {
+            'Скр': 1.0, 'Уск': 1.0,
+            'ВЫН': 0.75, 'Лвк': 0.75,
+        }
+        return WideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def wide_midfielder_attack(player_data: dict) -> float:
+        """Крайний полузащитник (Ат)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Нав': 1.0, 'Тех': 1.0,
+            'Пас': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0,
+            'Имп': 0.75, 'Инт': 0.75,
+        }
+        physical_weights = {
+            'Скр': 1.0, 'Уск': 1.0,
+            'Лвк': 0.75,
+        }
+        return WideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def wide_midfielder_overall(player_data: dict) -> float:
-        """Крайний полузащитник (ОВР) — заглушка"""
-        return 0.0
+        """Крайний полузащитник (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            WideMidfielder.wide_midfielder_support(player_data),
+            WideMidfielder.wide_midfielder_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def defensive_winger_overall(player_data: dict) -> float:
