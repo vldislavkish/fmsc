@@ -304,7 +304,7 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             row_data['Инсайд'] = AttackingWideMidfielder.inside_forward_overall(row_data)
             row_data['Треквартиста'] = AttackingWideMidfielder.trequartista_overall(row_data)
             row_data['Фланговый таргетмен'] = AttackingWideMidfielder.target_man_winger_overall(row_data)
-            row_data['Раумдойтер'] = AttackingWideMidfielder.Raumdeuter_overall(row_data)
+            row_data['Раумдойтер'] = AttackingWideMidfielder.raumdeuter_overall(row_data)
             row_data['Полуфланговый крайний полузащитник'] = AttackingWideMidfielder.inverted_winger_overall(row_data)
 
     print(f"✅ Парсинг завершен. Обработано строк: {len(data)}")
