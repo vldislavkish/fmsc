@@ -292,5 +292,20 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             row_data['Энганче'] = AttackingMidfielder.enganche_overall(row_data)
             row_data['Теневой нападающий'] = AttackingMidfielder.shadow_striker_overall(row_data)
 
+        # Роли атакующего крайнего полузащитника
+        awm_prefixes = ["П", "АП", "НП"]
+        is_attacking_wide_midfielder = has_position_prefix(positions_val, awm_prefixes)
+        from src.roles import AttackingWideMidfielder
+
+        if is_attacking_wide_midfielder:
+            row_data['Универсальность'] = AttackingWideMidfielder.overall(row_data)
+            row_data['Крайний полузащитник'] = AttackingWideMidfielder.wide_midfielder_overall(row_data)
+            row_data['Выдвинутый плеймейкер'] = AttackingWideMidfielder.advanced_playmaker_overall(row_data)
+            row_data['Инсайд'] = AttackingWideMidfielder.inside_forward_overall(row_data)
+            row_data['Треквартиста'] = AttackingWideMidfielder.trequartista_overall(row_data)
+            row_data['Фланговый таргетмен'] = AttackingWideMidfielder.target_man_winger_overall(row_data)
+            row_data['Раумдойтер'] = AttackingWideMidfielder.Raumdeuter_overall(row_data)
+            row_data['Полуфланговый крайний полузащитник'] = AttackingWideMidfielder.inverted_winger_overall(row_data)
+
     print(f"✅ Парсинг завершен. Обработано строк: {len(data)}")
     return pd.DataFrame(data, columns=models.ALL_COLUMNS)
