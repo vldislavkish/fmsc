@@ -40,6 +40,8 @@ def format_sheet(ws, columns: list, freeze_col: str = 'L2') -> None:
         'Опорный полузащитник', 'Оттянутый плеймейкер', 'Полузащитник-разрушитель',
         'Чистый опорный полузащитник', 'Хавбек', 'Реджиста',
         'Блуждающий плеймейкер', 'Сегундо-воланте',
+        'Центральный полузащитник', 'Полузащитник бокс-ту-бокс',
+        'Выдвинутый плеймейкер', 'Меццала', 'Каррилеро',
     ]
     for col_idx in range(1, len(columns) + 1):
         col_letter = get_column_letter(col_idx)
@@ -124,6 +126,18 @@ def save_to_excel_formatted(df: pd.DataFrame, output_path: str) -> None:
 
         for row in range(2, ws_dm.max_row + 1):
             ws_dm.cell(row=row, column=12).value = f'=AVERAGE(M{row}:T{row})'
+
+        # === Лист "Центральный полузащитник" ===
+        # Позиции: "КЗ", "ОП", "П", "АП"
+        cm_prefixes = ["КЗ", "ОП", "П", "АП"]
+        mask_cm = df['Позиции'].apply(lambda x: has_position_prefix(x, cm_prefixes))
+        df_cm = df[mask_cm][models.CENTER_MIDFIELDER_COLUMNS].copy()
+        df_cm.to_excel(writer, sheet_name='Центральный полузащитник', index=False)
+        ws_cm = writer.sheets['Центральный полузащитник']
+        format_sheet(ws_cm, models.CENTER_MIDFIELDER_COLUMNS, freeze_col='M2')
+
+        for row in range(2, ws_cm.max_row + 1):
+            ws_cm.cell(row=row, column=12).value = f'=AVERAGE(M{row}:T{row})'
 
     print(f"💾 Excel с форматированием сохранен: {output_path}")
 

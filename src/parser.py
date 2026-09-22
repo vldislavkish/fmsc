@@ -250,5 +250,21 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             row_data['Блуждающий плеймейкер'] = DefensiveMidfielder.roamer_overall(row_data)
             row_data['Сегундо-воланте'] = DefensiveMidfielder.segundo_volante_overall(row_data)
 
+        # Роли центрального полузащитника
+        cm_prefixes = ["КЗ", "ОП", "П", "АП"]
+        is_center_midfielder = has_position_prefix(positions_val, cm_prefixes)
+        from src.roles import CentralMidfielder
+
+        if is_center_midfielder:
+            row_data['Универсальность'] = CentralMidfielder.overall(row_data)
+            row_data['Центральный полузащитник'] = CentralMidfielder.central_midfielder_overall(row_data)
+            row_data['Оттянутый плеймейкер'] = CentralMidfielder.deep_lying_playmaker_overall(row_data)
+            row_data['Полузащитник бокс-ту-бокс'] = CentralMidfielder.box_to_box_midfielder_overall(row_data)
+            row_data['Выдвинутый плеймейкер'] = CentralMidfielder.advanced_playmaker_overall(row_data)
+            row_data['Полузащитник-разрушитель'] = CentralMidfielder.ball_winning_midfielder_overall(row_data)
+            row_data['Блуждающий плеймейкер'] = CentralMidfielder.roamer_overall(row_data)
+            row_data['Меццала'] = CentralMidfielder.mezzala_overall(row_data)
+            row_data['Каррилеро'] = CentralMidfielder.carrilero_overall(row_data)
+
     print(f"✅ Парсинг завершен. Обработано строк: {len(data)}")
     return pd.DataFrame(data, columns=models.ALL_COLUMNS)
