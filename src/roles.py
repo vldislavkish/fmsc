@@ -1763,10 +1763,53 @@ class AttackingWideMidfielder:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Фланговый таргетмен ===
+    @staticmethod
+    def target_man_winger_support(player_data: dict) -> float:
+        """Фланговый таргетмен (По)"""
+        technical_weights = {
+            'Глв': 1.0,
+            'Нав': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Ком': 1.0, 'Хрб': 1.0,
+            'Ибм': 0.75, 'Инт': 0.75, 'Раб': 0.75,
+        }
+        physical_weights = {
+            'ПРГ': 1.0, 'СИЛ': 1.0,
+            'ВЫН': 0.75, 'КРД': 0.75,
+        }
+        return AttackingWideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def target_man_winger_attack(player_data: dict) -> float:
+        """Фланговый таргетмен (Ат)"""
+        technical_weights = {
+            'Глв': 1.0,
+            'Зав': 0.75, 'Нав': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Хрб': 1.0,
+            'Инт': 0.75, 'Ком': 0.75, 'Раб': 0.75,
+        }
+        physical_weights = {
+            'ПРГ': 1.0, 'СИЛ': 1.0,
+            'ВЫН': 0.75, 'КРД': 0.75,
+        }
+        return AttackingWideMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def target_man_winger_overall(player_data: dict) -> float:
-        """Фланговый таргетмен (ОВР) — заглушка"""
-        return 0.0
+        """Фланговый таргетмен (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            AttackingWideMidfielder.target_man_winger_support(player_data),
+            AttackingWideMidfielder.target_man_winger_attack(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def Raumdeuter_overall(player_data: dict) -> float:
