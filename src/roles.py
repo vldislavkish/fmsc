@@ -1920,10 +1920,30 @@ class Striker:
         ]
         return round(sum(roles) / len(roles), 2)
 
+    # === Выдвинутый форвард ===
+    @staticmethod
+    def advanced_forward_attack(player_data: dict) -> float:
+        """Выдвинутый форвард (Ат)"""
+        technical_weights = {
+            'Дрб': 1.0, 'Зав': 1.0, 'ПКас': 1.0, 'Тех': 1.0,
+            'Пас': 0.75,
+        }
+        mental_weights = {
+            'Ибм': 1.0, 'Смб': 1.0,
+            'Инт': 0.75, 'ПРш': 0.75, 'Раб': 0.75,
+        }
+        physical_weights = {
+            'Уск': 1.0,
+            'ВЫН': 0.75, 'КРД': 0.75, 'Лвк': 0.75, 'Скр': 0.75,
+        }
+        return Striker._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
     @staticmethod
     def advanced_forward_overall(player_data: dict) -> float:
-        """Выдвинутый форвард (ОВР) — заглушка"""
-        return 0.0
+        """Выдвинутый форвард (ОВР) — у роли только одна обязанность (Ат)"""
+        return Striker.advanced_forward_attack(player_data)
 
     @staticmethod
     def target_man_overall(player_data: dict) -> float:
