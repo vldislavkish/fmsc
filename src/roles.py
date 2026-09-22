@@ -671,11 +671,51 @@ class DefensiveMidfielder:
                            for weight in {**technical_weights, **mental_weights, **physical_weights}.values())
         return round((weighted_sum / max_possible) * 100, 2) if max_possible > 0 else 0.0
 
+    # === Опорный полузащитник ===
+    @staticmethod
+    def defensive_midfielder_defend(player_data: dict) -> float:
+        """Опорный полузащитник (Зщ)"""
+        technical_weights = {
+            'Отб': 1.0,
+            'Опк': 0.75, 'Пас': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Инт': 1.0, 'Ком': 1.0, 'Кнц': 1.0,
+            'Агр': 0.75, 'ПРш': 0.75, 'Раб': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 0.75, 'СИЛ': 0.75,
+        }
+        return DefensiveMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
+
+    @staticmethod
+    def defensive_midfielder_support(player_data: dict) -> float:
+        """Опорный полузащитник (По)"""
+        technical_weights = {
+            'Отб': 1.0,
+            'Опк': 0.75, 'Пас': 0.75, 'ПКас': 0.75,
+        }
+        mental_weights = {
+            'Поз': 1.0, 'Инт': 1.0, 'Ком': 1.0, 'Кнц': 1.0,
+            'Агр': 0.75, 'ПРш': 0.75, 'Раб': 0.75, 'Смб': 0.75,
+        }
+        physical_weights = {
+            'ВЫН': 0.75, 'СИЛ': 0.75,
+        }
+        return DefensiveMidfielder._calculate_role(
+            player_data, technical_weights, mental_weights, physical_weights
+        )
 
     @staticmethod
     def defensive_midfielder_overall(player_data: dict) -> float:
-        """Опорный полузащитник (ОВР) — заглушка"""
-        return 0.0
+        """Опорный полузащитник (ОВР) — среднее арифметическое ролей"""
+        roles = [
+            DefensiveMidfielder.defensive_midfielder_defend(player_data),
+            DefensiveMidfielder.defensive_midfielder_support(player_data),
+        ]
+        return round(sum(roles) / len(roles), 2)
 
     @staticmethod
     def deep_lying_playmaker_overall(player_data: dict) -> float:
