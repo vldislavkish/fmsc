@@ -337,6 +337,91 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             row_data['Треквартиста'] = Striker.trequartista_overall(row_data)
             row_data['Ложная девятка'] = Striker.false_nine_overall(row_data)
 
+        # ==========================================
+        # РАСЧЕТ ПС и ЦЕНЫ / КАЧЕСТВА
+        # ==========================================
+        import math
+        from src.models import get_har_coefficient
+
+        age = row_data.get('Возраст', 20)
+        ovr = row_data['ОВР']
+        transfer_value = row_data.get('Сумма трансфера (€)', 0)
+
+        # Проверяем, продается ли игрок и есть ли цена
+        is_for_sale = (
+                transfer_value is not None and
+                not (isinstance(transfer_value, float) and math.isnan(transfer_value)) and
+                isinstance(transfer_value, (int, float)) and
+                transfer_value > 0
+        )
+
+        if not is_for_sale:
+            # Игрок не продается или цена неизвестна — пропускаем расчет
+            row_data['Цена / Качество'] = float('nan')
+        else:
+            # 1. ВЗР (Возраст)
+            if age <= 16:
+                vzr = 1.45
+            elif age <= 18:
+                vzr = 1.35
+            elif age <= 21:
+                vzr = 1.25
+            elif age <= 23:
+                vzr = 1.15
+            elif age <= 26:
+                vzr = 1.10
+            else:
+                vzr = max(0.3, 1.0 - (age - 27) * 0.1)
+
+            # 2. СТРМЛ (Природные данные + Работоспособность)
+            nat_fit = row_data.get('Природные данные', 10)
+            work_rate = row_data.get('Работоспособность', 10)
+            strml_avg = (nat_fit + work_rate) / 2
+            if strml_avg <= 7:
+                strml = 0.7
+            elif strml_avg <= 12:
+                strml = 0.9
+            elif strml_avg <= 16:
+                strml = 1.1
+            else:
+                strml = 1.3
+
+            # 3. ХАР (Характер + Пресса из словаря)
+            character = row_data.get('Характер', '')
+            press = row_data.get('Общение с прессой', '')
+            har = get_har_coefficient(character, press)
+
+            # 4. СБР (Сборная)
+            team = str(row_data.get('Команда', '')).strip()
+            games = row_data.get('Игр', 0)
+            youth_games = row_data.get('Млд Игр', 0)
+
+            sbr = 1.0
+            if team == 'Главная':
+                sbr = 1.3
+            elif team and team != 'Главная':
+                sbr = 1.15  # U21, U23 и т.д.
+
+            if isinstance(games, (int, float)) and games > 0:
+                sbr += min(0.3, math.log10(games + 1) * 0.1)
+            if isinstance(youth_games, (int, float)) and youth_games > 0:
+                sbr += min(0.15, math.log10(youth_games + 1) * 0.05)
+            sbr = min(2.0, sbr)
+
+            # 5. СУМТР (Логарифмический коэффициент цены)
+            log_sumtr = 1.0 + math.log10(max(1, transfer_value / 100_000)) * 0.1
+            sumtr_coeff = min(2.0, log_sumtr * 1.3) if age <= 21 else min(1.5, log_sumtr)
+
+            # 6. Итоговый расчет ПС
+            normalizer = 1.5
+            ps = (ovr * vzr * strml * har * sbr * sumtr_coeff) / normalizer
+
+            # 7. Цена / Качество
+            price_in_millions = transfer_value / 1_000_000
+            price_quality = (ps * 0.7 + ovr * 0.3) / price_in_millions
+            row_data['Цена / Качество'] = round(price_quality, 6)
+        # ==========================================
+
         data.append(row_data)
         if idx % 1000 == 0:
             print(f"   ⏳ Обработано: {idx} строк")
