@@ -347,18 +347,19 @@ def parse_squad(html_path: str) -> pd.DataFrame:
         ovr = row_data['ОВР']
         transfer_value = row_data.get('Сумма трансфера (€)', 0)
 
-        # Проверяем, продается ли игрок и есть ли цена
-        is_for_sale = (
+        # Проверяем, есть ли данные для расчёта
+        has_transfer_data = (
                 transfer_value is not None and
-                not (isinstance(transfer_value, float) and math.isnan(transfer_value)) and
-                isinstance(transfer_value, (int, float)) and
-                transfer_value > 0
+                not (isinstance(transfer_value, float) and math.isnan(transfer_value))
         )
 
-        if not is_for_sale:
-            # Игрок не продается или цена неизвестна — пропускаем расчет
+        if not has_transfer_data:
+            # Нет данных о трансфере — не считаем
             row_data['Цена / Качество'] = float('nan')
         else:
+            # Рассчитываем коэффициенты
+            age = row_data.get('Возраст', 20)
+
             # 1. ВЗР (Возраст)
             if age <= 16:
                 vzr = 1.45
@@ -386,7 +387,7 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             else:
                 strml = 1.3
 
-            # 3. ХАР (Характер + Пресса из словаря)
+            # 3. ХАР (Характер + Пресса)
             character = row_data.get('Характер', '')
             press = row_data.get('Общение с прессой', '')
             har = get_har_coefficient(character, press)
@@ -400,7 +401,7 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             if team == 'Главная':
                 sbr = 1.3
             elif team and team != 'Главная':
-                sbr = 1.15  # U21, U23 и т.д.
+                sbr = 1.15
 
             if isinstance(games, (int, float)) and games > 0:
                 sbr += min(0.3, math.log10(games + 1) * 0.1)
@@ -409,18 +410,20 @@ def parse_squad(html_path: str) -> pd.DataFrame:
             sbr = min(2.0, sbr)
 
             # 5. СУМТР (Логарифмический коэффициент цены)
-            log_sumtr = 1.0 + math.log10(max(1, transfer_value / 100_000)) * 0.1
+            # Для бесплатных игроков (transfer_value = 0) используем минимальную цену 100 000 евро
+            effective_transfer = max(transfer_value, 100_000) if transfer_value >= 0 else 100_000
+            log_sumtr = 1.0 + math.log10(max(1, effective_transfer / 100_000)) * 0.1
             sumtr_coeff = min(2.0, log_sumtr * 1.3) if age <= 21 else min(1.5, log_sumtr)
 
-            # 6. Итоговый расчет ПС
-            normalizer = 1.5
-            ps = (ovr * vzr * strml * har * sbr * sumtr_coeff) / normalizer
+            # 6. ПС (Потенциальные способности)
+            ps = (ovr * vzr * strml * har * sbr * sumtr_coeff) / 1.5
 
             # 7. Цена / Качество
-            price_in_millions = transfer_value / 1_000_000
+            # Для бесплатных игроков делим на 0.1 млн (100 000 евро)
+            price_in_millions = max(effective_transfer / 1_000_000, 0.1)
             price_quality = (ps * 0.7 + ovr * 0.3) / price_in_millions
-            row_data['Цена / Качество'] = round(price_quality, 6)
-        # ==========================================
+
+            row_data['Цена / Качество'] = round(price_quality, 2)
 
         data.append(row_data)
         if idx % 1000 == 0:
